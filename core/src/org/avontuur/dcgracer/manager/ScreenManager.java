@@ -3,7 +3,7 @@ package org.avontuur.dcgracer.manager;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Screen;
 
-import org.avontuur.dcgracer.base.BaseScreen;
+import org.avontuur.dcgracer.base.BaseScene2DScreen;
 
 /**
  * Singleton class that manages screen navigation.
@@ -42,8 +42,7 @@ public class ScreenManager {
         Screen currentScreen = game.getScreen();
 
         // Show new screen
-        BaseScreen newScreen = screenEnum.getScreen(params);
-        newScreen.buildStage();
+        Screen newScreen = screenEnum.getScreen(params);
         game.setScreen(newScreen);
 
         // Dispose previous screen

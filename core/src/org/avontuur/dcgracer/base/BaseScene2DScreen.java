@@ -8,13 +8,13 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 
 /**
- * Base class for all the screens in the game.
+ * Base class for all the screens using Scene2D in the game.
  *
  * Created by Bram Avontuur on 2016-02-28.
  */
-public abstract class BaseScreen extends Stage implements Screen {
-    protected BaseScreen() {
-        super( new StretchViewport(1920.0f, 1080.0f, new OrthographicCamera()) );
+public abstract class BaseScene2DScreen extends Stage implements Screen {
+    protected BaseScene2DScreen() {
+        super(new StretchViewport(1920.0f, 1080.0f, new OrthographicCamera()));
     }
 
     // Subclasses must load actors in this method
@@ -33,6 +33,7 @@ public abstract class BaseScreen extends Stage implements Screen {
 
     @Override
     public void show() {
+        buildStage();
         Gdx.input.setInputProcessor(this);
     }
 
@@ -41,7 +42,15 @@ public abstract class BaseScreen extends Stage implements Screen {
         getViewport().update(width, height, true);
     }
 
-    @Override public void hide() {}
-    @Override public void pause() {}
-    @Override public void resume() {}
+    @Override
+    public void hide() {
+    }
+
+    @Override
+    public void pause() {
+    }
+
+    @Override
+    public void resume() {
+    }
 }

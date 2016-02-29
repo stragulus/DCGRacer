@@ -4,14 +4,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 
-import org.avontuur.dcgracer.base.BaseScreen;
+import org.avontuur.dcgracer.base.BaseScene2DScreen;
 
 /**
  * This class represents the actual game play.
  *
  * Created by Bram Avontuur on 2016-02-28.
  */
-public class GameScreen extends BaseScreen {
+public class GameScreen extends BaseScene2DScreen {
 
     private Texture txtrGameLogo;
 
