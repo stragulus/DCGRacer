@@ -36,9 +36,9 @@ public class DCGRacer extends Game {
             @Override
             public void run() {
 
-                // postRunnable: this will make sure the code will run in the render thread. Why..?
-                // I guess at this point resources have loaded? If at that time less than the desired
-                // number of seconds have elapsed, sleep for a bit.
+                // postRunnable: this will make sure the code will run in the render thread. This is
+                // necessary because Game.setScreen() needs to run in the render thread (called
+                // by ScreenManager.showScreen)
                 Gdx.app.postRunnable(new Runnable() {
                     @Override
                     public void run() {
