@@ -1,11 +1,13 @@
 package org.avontuur.dcgracer;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.Logger;
 import com.badlogic.gdx.utils.Timer;
 
 import org.avontuur.dcgracer.manager.ScreenEnum;
@@ -21,8 +23,12 @@ public class DCGRacer extends Game {
 
     private static long SPLASH_MINIMUM_MILLIS = 2000L;
 
+    public static final Logger log = new Logger("Game", Logger.DEBUG);
+
     @Override
     public void create() {
+        Gdx.app.setLogLevel(Application.LOG_DEBUG);
+
         ScreenManager.getInstance().initialize(this);
         ScreenManager.getInstance().showScreen(ScreenEnum.SPLASH);
 
