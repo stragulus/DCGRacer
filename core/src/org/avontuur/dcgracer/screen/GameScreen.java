@@ -35,8 +35,8 @@ public class GameScreen implements Screen {
 
     final float PIXELS_TO_METERS = 100f;
     //final float WORLD_WIDTH = 30; // meters
-    final float WORLD_HEIGHT = 10;
-    final float VIEWPORT_WIDTH = 30;
+    final float WORLD_HEIGHT = 10f;
+    final float VIEWPORT_WIDTH = 30f;
 
     public GameScreen() {
         setupCamera();
@@ -44,12 +44,10 @@ public class GameScreen implements Screen {
 
         Texture txtrGameLogo = new Texture(Gdx.files.internal("badlogic.jpg"));
         sprite = new Sprite(txtrGameLogo);
-        // Center the sprite in the top/middle of the screen
-        sprite.setSize(2, 2); //meters
-        sprite.setPosition(cam.viewportWidth / 2 - sprite.getWidth() / 2, cam.viewportHeight / 2);
         DCGRacer.log.debug("sprite size = " + sprite.getWidth() + "," + sprite.getHeight());
-        DCGRacer.log.debug("sprite position = " + sprite.getX() + "," + sprite.getY());
-
+        // Center the sprite in the top/middle of the screen
+        sprite.setSize(2f, 2f); //meters
+        sprite.setPosition(cam.viewportWidth / 2 - sprite.getWidth() / 2, cam.viewportHeight / 2);
         // Now create a BodyDefinition.  This defines the physics objects type and position in the simulation
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
@@ -71,10 +69,8 @@ public class GameScreen implements Screen {
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.density = 1f;
+        body.createFixture(fixtureDef);
 
-        Fixture fixture = body.createFixture(fixtureDef);
-
-        // Shape is the only disposable of the lot, so get rid of it
         shape.dispose();
 
         batch = new SpriteBatch();
@@ -98,13 +94,14 @@ public class GameScreen implements Screen {
         // Now update the sprite position accordingly to its now updated Physics body
         // TODO: add wrapper class that manages both sprite and body?
         sprite.setPosition(body.getPosition().x, body.getPosition().y);
-        DCGRacer.log.debug("sprite size = " + sprite.getWidth() + "," + sprite.getHeight());
-        DCGRacer.log.debug("sprite position = " + sprite.getX() + "," + sprite.getY());
+        //DCGRacer.log.debug("sprite size = " + sprite.getWidth() + "," + sprite.getHeight());
+        //DCGRacer.log.debug("sprite position = " + sprite.getX() + "," + sprite.getY());
 
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         batch.begin();
-        batch.draw(sprite, sprite.getX(), sprite.getY());
+        //batch.draw(sprite, sprite.getX(), sprite.getY());
+        sprite.draw(batch);
         batch.end();
 
     }
@@ -114,6 +111,7 @@ public class GameScreen implements Screen {
         cam.viewportWidth = VIEWPORT_WIDTH;
         cam.viewportHeight = VIEWPORT_WIDTH * height / width;
         cam.update();
+        DCGRacer.log.debug("Resized to " + cam.viewportWidth + "," + cam.viewportHeight);
     }
 
     @Override
@@ -152,7 +150,6 @@ public class GameScreen implements Screen {
         // accordingly.
         cam.position.set(cam.viewportWidth / 2f, cam.viewportHeight / 2f, 0);
         cam.update();
-        DCGRacer.log.debug("Camera viewport size = " + cam.viewportWidth + "," + cam.viewportHeight);
     }
 
     private void setupWorld() {
