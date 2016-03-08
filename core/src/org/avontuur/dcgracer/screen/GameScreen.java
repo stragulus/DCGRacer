@@ -2,23 +2,21 @@ package org.avontuur.dcgracer.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.utils.Logger;
 
 import org.avontuur.dcgracer.DCGRacer;
+import org.avontuur.dcgracer.utils.*;
 
 /**
  * Created by Bram Avontuur on 2016-03-01.
@@ -28,10 +26,12 @@ import org.avontuur.dcgracer.DCGRacer;
 public class GameScreen implements Screen {
 
     private SpriteBatch batch;
+    private ShapeRenderer shapeRenderer;
     private Sprite sprite;
     private World world;
     private Body body;
     private OrthographicCamera cam;
+    private float[] terrain;
 
     final float PIXELS_TO_METERS = 100f;
     //final float WORLD_WIDTH = 30; // meters
@@ -74,6 +74,8 @@ public class GameScreen implements Screen {
         shape.dispose();
 
         batch = new SpriteBatch();
+        shapeRenderer = new ShapeRenderer();
+        terrain = generateTerrain();
     }
 
     @Override
@@ -103,6 +105,7 @@ public class GameScreen implements Screen {
         //batch.draw(sprite, sprite.getX(), sprite.getY());
         sprite.draw(batch);
         batch.end();
+        renderTerrain(terrain, 0.125f, 1f);
 
     }
 
@@ -134,6 +137,7 @@ public class GameScreen implements Screen {
         sprite.getTexture().dispose();
         world.dispose();
         batch.dispose();
+        shapeRenderer.dispose();
     }
 
     private void setupCamera() {
@@ -154,5 +158,30 @@ public class GameScreen implements Screen {
 
     private void setupWorld() {
         world = new World(new Vector2(0, -9.8f), true);
+    }
+
+    private float[] generateTerrain() {
+        //just calculating and debug-outputting values for now
+        float[] terrainDataPoints = GameMath.midfieldDisplacement2D(8, 10f);
+
+        for (int i= 0; i < terrainDataPoints.length; i++) {
+            DCGRacer.log.debug("Terrain[" + i + "] = " + terrainDataPoints[i]);
+        }
+        return terrainDataPoints;
+    }
+
+    private void renderTerrain(float[] terrain, float scaleX, float scaleY) {
+        shapeRenderer.setProjectionMatrix(cam.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(0, 0, 0, 1);
+        for (int i = 1; i < terrain.length; i++) {
+            float x1 = (i - 1) * scaleX;
+            float x2 = i * scaleX;
+            float y1 = terrain[i - 1] * scaleY;
+            float y2 = terrain[i] * scaleY;
+
+            shapeRenderer.line(x1, y1, x2, y2);
+        }
+        shapeRenderer.end();
     }
 }
