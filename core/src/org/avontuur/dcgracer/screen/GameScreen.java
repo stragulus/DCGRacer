@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.ChainShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
@@ -30,6 +31,7 @@ public class GameScreen implements Screen {
     private Sprite sprite;
     private World world;
     private Body body;
+    private Body bodyTerrain;
     private OrthographicCamera cam;
     private float[] terrain;
 
@@ -42,6 +44,7 @@ public class GameScreen implements Screen {
         setupCamera();
         setupWorld();
 
+        // "PLAYER"
         Texture txtrGameLogo = new Texture(Gdx.files.internal("badlogic.jpg"));
         sprite = new Sprite(txtrGameLogo);
         DCGRacer.log.debug("sprite size = " + sprite.getWidth() + "," + sprite.getHeight());
@@ -51,15 +54,14 @@ public class GameScreen implements Screen {
         // Now create a BodyDefinition.  This defines the physics objects type and position in the simulation
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
-        bodyDef.position.set(sprite.getX(), sprite.getY());
+        // body positions are at the center of the shape, sprit position at the bottom left corner. How convenient.
+        bodyDef.position.set(sprite.getX() + sprite.getWidth() / 2f, sprite.getY() + sprite.getHeight() / 2f);
 
         // Create a body in the world using our definition
         body = world.createBody(bodyDef);
 
         // Now define the dimensions of the physics shape
         PolygonShape shape = new PolygonShape();
-        // We are a box, so this makes sense, no?
-        // Basically set the physics polygon to a box with the same dimensions as our sprite
         shape.setAsBox(sprite.getWidth()/2, sprite.getHeight()/2);
 
         // FixtureDef is a confusing expression for physical properties
@@ -73,9 +75,33 @@ public class GameScreen implements Screen {
 
         shape.dispose();
 
+        //GROUND
+        int numIterations = 9;
+        float range = 10f;
+        float scaleX = 0.0625f;
+        float scaleY = 1f;
+
+        terrain = generateTerrain(numIterations, range, scaleX, scaleY);
+
+        ChainShape terrainShape = new ChainShape();
+        terrainShape.createChain(terrain);
+
+        bodyDef = new BodyDef();
+        bodyDef.type = BodyDef.BodyType.StaticBody;
+        bodyDef.position.set(0, 0);
+
+        Body groundBody = world.createBody(bodyDef);
+
+        fixtureDef = new FixtureDef();
+        fixtureDef.shape = terrainShape;
+        fixtureDef.density = 1f;
+
+        groundBody.createFixture(fixtureDef);
+
+        terrainShape.dispose();
+
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
-        terrain = generateTerrain();
     }
 
     @Override
@@ -95,7 +121,7 @@ public class GameScreen implements Screen {
 
         // Now update the sprite position accordingly to its now updated Physics body
         // TODO: add wrapper class that manages both sprite and body?
-        sprite.setPosition(body.getPosition().x, body.getPosition().y);
+        sprite.setPosition(body.getPosition().x - sprite.getWidth() / 2, body.getPosition().y - sprite.getHeight() / 2);
         //DCGRacer.log.debug("sprite size = " + sprite.getWidth() + "," + sprite.getHeight());
         //DCGRacer.log.debug("sprite position = " + sprite.getX() + "," + sprite.getY());
 
@@ -105,7 +131,7 @@ public class GameScreen implements Screen {
         //batch.draw(sprite, sprite.getX(), sprite.getY());
         sprite.draw(batch);
         batch.end();
-        renderTerrain(terrain, 0.125f, 1f);
+        renderTerrain(terrain);
 
     }
 
@@ -160,27 +186,31 @@ public class GameScreen implements Screen {
         world = new World(new Vector2(0, -9.8f), true);
     }
 
-    private float[] generateTerrain() {
+    private float[] generateTerrain(int numIterations, float range, float scaleX, float scaleY) {
         //just calculating and debug-outputting values for now
-        float[] terrainDataPoints = GameMath.midfieldDisplacement2D(8, 10f);
+        float[] terrainDataPointsRaw = GameMath.midfieldDisplacement2D(numIterations, range);
+        float[] terrainDataPoints = new float[terrainDataPointsRaw.length * 2];
 
-        for (int i= 0; i < terrainDataPoints.length; i++) {
-            DCGRacer.log.debug("Terrain[" + i + "] = " + terrainDataPoints[i]);
+        //convert to array of alternating x,y coordinates
+        for (int i = 0; i < terrainDataPointsRaw.length; i++) {
+            float x = i * scaleX;
+            float y = terrainDataPointsRaw[i] * scaleY;
+            terrainDataPoints[i * 2] = x;
+            terrainDataPoints[i * 2 + 1] = y;
         }
+        //for (int i= 0; i < terrainDataPoints.length; i++) {
+        //    DCGRacer.log.debug("Terrain[" + i + "] = " + terrainDataPoints[i]);
+        //}
         return terrainDataPoints;
     }
 
-    private void renderTerrain(float[] terrain, float scaleX, float scaleY) {
+    private void renderTerrain(float[] terrain) {
         shapeRenderer.setProjectionMatrix(cam.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(0, 0, 0, 1);
-        for (int i = 1; i < terrain.length; i++) {
-            float x1 = (i - 1) * scaleX;
-            float x2 = i * scaleX;
-            float y1 = terrain[i - 1] * scaleY;
-            float y2 = terrain[i] * scaleY;
-
-            shapeRenderer.line(x1, y1, x2, y2);
+        // terrain is always of even length
+        for (int i = 0; i < terrain.length - 2; i += 2) {
+            shapeRenderer.line(terrain[i], terrain[i + 1], terrain[i + 2], terrain[i + 3]);
         }
         shapeRenderer.end();
     }
