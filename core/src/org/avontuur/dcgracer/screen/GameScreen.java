@@ -12,6 +12,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.ChainShape;
+import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
@@ -61,8 +62,11 @@ public class GameScreen implements Screen {
         body = world.createBody(bodyDef);
 
         // Now define the dimensions of the physics shape
-        PolygonShape shape = new PolygonShape();
-        shape.setAsBox(sprite.getWidth()/2, sprite.getHeight()/2);
+        //PolygonShape shape = new PolygonShape();
+        //shape.setAsBox(sprite.getWidth()/2, sprite.getHeight()/2);
+        // let's fake a circle here for more fun terrain action, I know the sprite is square..
+        CircleShape shape = new CircleShape();
+        shape.setRadius(1f);
 
         // FixtureDef is a confusing expression for physical properties
         // Basically this is where you, in addition to defining the shape of the body
@@ -71,6 +75,7 @@ public class GameScreen implements Screen {
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.density = 1f;
+        fixtureDef.restitution = 0.6f; //make it bounce
         body.createFixture(fixtureDef);
 
         shape.dispose();
