@@ -14,7 +14,6 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.ChainShape;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 
 import org.avontuur.dcgracer.DCGRacer;
@@ -31,7 +30,7 @@ public class GameScreen implements Screen {
     private ShapeRenderer shapeRenderer;
     private Sprite sprite;
     private World world;
-    private Body body;
+    private Body playerBody;
     private Body bodyTerrain;
     private OrthographicCamera cam;
     private float[] terrain;
@@ -44,6 +43,8 @@ public class GameScreen implements Screen {
         setupWorld();
 
         // "PLAYER"
+        // --------
+
         Texture txtrGameLogo = new Texture(Gdx.files.internal("ball.png"));
         sprite = new Sprite(txtrGameLogo);
         CircleShape shape = new CircleShape();
@@ -57,26 +58,22 @@ public class GameScreen implements Screen {
         // Now create a BodyDefinition.  This defines the physics objects type and position in the simulation
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
-        // body positions are at the center of the shape, sprite position at the bottom left corner. How convenient.
+        // playerBody positions are at the center of the shape, sprite position at the bottom left corner. How convenient.
         bodyDef.position.set(sprite.getX() + sprite.getWidth() / 2f, sprite.getY() + sprite.getHeight() / 2f);
 
-        // Create a body in the world using our definition
-        body = world.createBody(bodyDef);
+        playerBody = world.createBody(bodyDef);
 
-
-        // FixtureDef is a confusing expression for physical properties
-        // Basically this is where you, in addition to defining the shape of the body
-        // you also define it's properties like density, restitution and others we will see shortly
-        // If you are wondering, density and area are used to calculate over all mass
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.density = 1f;
         fixtureDef.restitution = 0.6f; //make it bounce
-        body.createFixture(fixtureDef);
+        playerBody.createFixture(fixtureDef);
 
         shape.dispose();
 
-        //GROUND
+        // GROUND
+        // ------
+
         int numIterations = 9;
         float range = 3f;
         float scaleX = 0.03f;
@@ -101,6 +98,9 @@ public class GameScreen implements Screen {
 
         terrainShape.dispose();
 
+        // OTHER
+        // -----
+
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
     }
@@ -120,9 +120,9 @@ public class GameScreen implements Screen {
         // TODO: see comment above
         world.step(Gdx.graphics.getDeltaTime(), 6, 2);
 
-        // Now update the sprite position accordingly to its now updated Physics body
-        // TODO: add wrapper class that manages both sprite and body?
-        sprite.setPosition(body.getPosition().x - sprite.getWidth() / 2, body.getPosition().y - sprite.getHeight() / 2);
+        // Now update the sprite position accordingly to its now updated Physics playerBody
+        // TODO: add wrapper class that manages both sprite and playerBody?
+        sprite.setPosition(playerBody.getPosition().x - sprite.getWidth() / 2, playerBody.getPosition().y - sprite.getHeight() / 2);
         //DCGRacer.log.debug("sprite size = " + sprite.getWidth() + "," + sprite.getHeight());
         //DCGRacer.log.debug("sprite position = " + sprite.getX() + "," + sprite.getY());
 
