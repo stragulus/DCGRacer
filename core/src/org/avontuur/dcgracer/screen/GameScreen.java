@@ -1,6 +1,8 @@
 package org.avontuur.dcgracer.screen;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
@@ -9,8 +11,9 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.input.GestureDetector;
+import com.badlogic.gdx.input.GestureDetector.GestureListener;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.ChainShape;
@@ -26,7 +29,7 @@ import org.avontuur.dcgracer.utils.*;
  *
  * This class represents the actual game.
  */
-public class GameScreen implements Screen {
+public class GameScreen implements Screen, GestureListener, InputProcessor {
 
     private SpriteBatch batch;
     private ShapeRenderer shapeRenderer;
@@ -37,6 +40,8 @@ public class GameScreen implements Screen {
     private OrthographicCamera cam;
     private float[] terrain;
 
+    // game state variables
+    private short pushDirection = 0;
     final float PIXELS_TO_METERS = 100f;
     final float VIEWPORT_WIDTH = 10f;
 
@@ -100,6 +105,17 @@ public class GameScreen implements Screen {
 
         terrainShape.dispose();
 
+        // INPUT HANDLING
+        // --------------
+
+        InputMultiplexer im = new InputMultiplexer();
+        GestureDetector gd = new GestureDetector(this);
+        im.addProcessor(gd);
+        im.addProcessor(this);
+
+
+        Gdx.input.setInputProcessor(im);
+
         // OTHER
         // -----
 
@@ -115,6 +131,15 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         centerCamera(delta);
         cam.update();
+
+        final float pushForce = 4f;
+        if (pushDirection > 0) {
+            playerBody.applyForceToCenter(pushForce, 0f, true);
+        } else if (pushDirection < 0) {
+            playerBody.applyForceToCenter(-pushForce, 0f, true);
+        }
+        pushDirection = 0; //reset after each event!
+
         batch.setProjectionMatrix(cam.combined);
 
         // Advance the world, by the amount of time that has elapsed since the last frame
@@ -225,5 +250,103 @@ public class GameScreen implements Screen {
             shapeRenderer.line(terrain[i], terrain[i + 1], terrain[i + 2], terrain[i + 3]);
         }
         shapeRenderer.end();
+    }
+
+    // INPUT HANDLING
+
+    @Override
+    public boolean touchDown(float x, float y, int pointer, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean tap(float x, float y, int count, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean longPress(float x, float y) {
+        return false;
+    }
+
+    @Override
+    public boolean fling(float velocityX, float velocityY, int button) {
+        if (velocityX > 0) {
+            pushDirection = 1;
+            return true;
+        } else if (velocityX < 0) {
+            pushDirection = -1;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean pan(float x, float y, float deltaX, float deltaY) {
+        return false;
+    }
+
+    @Override
+    public boolean panStop(float x, float y, int pointer, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean zoom(float initialDistance, float distance) {
+        return false;
+    }
+
+    @Override
+    public boolean pinch(Vector2 initialPointer1, Vector2 initialPointer2, Vector2 pointer1, Vector2 pointer2) {
+        return false;
+    }
+
+    @Override
+    public boolean keyDown(int keycode) {
+        return false;
+    }
+
+    @Override
+    public boolean keyUp(int keycode) {
+        if (keycode == Input.Keys.RIGHT) {
+            pushDirection = 1;
+            return true;
+        } else if (keycode == Input.Keys.LEFT) {
+            pushDirection = -1;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean keyTyped(char character) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int screenX, int screenY, int pointer) {
+        return false;
+    }
+
+    @Override
+    public boolean mouseMoved(int screenX, int screenY) {
+        return false;
+    }
+
+    @Override
+    public boolean scrolled(int amount) {
+        return false;
     }
 }
