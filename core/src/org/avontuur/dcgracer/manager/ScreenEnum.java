@@ -2,6 +2,7 @@ package org.avontuur.dcgracer.manager;
 
 import com.badlogic.gdx.Screen;
 
+import org.avontuur.dcgracer.screen.GameOverScreen;
 import org.avontuur.dcgracer.screen.GameScreen;
 import org.avontuur.dcgracer.screen.SplashScreen;
 
@@ -19,6 +20,9 @@ public enum ScreenEnum {
     },
     GAME {
         public Screen getScreen(Object... params) { return new GameScreen(); }
+    },
+    GAMEOVER {
+        public Screen getScreen(Object... params) { return new GameOverScreen(); }
     };
 
     public abstract Screen getScreen(Object... params);

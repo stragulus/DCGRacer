@@ -22,6 +22,8 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 
 import org.avontuur.dcgracer.DCGRacer;
+import org.avontuur.dcgracer.manager.ScreenEnum;
+import org.avontuur.dcgracer.manager.ScreenManager;
 import org.avontuur.dcgracer.utils.*;
 
 /**
@@ -132,7 +134,8 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         centerCamera(delta);
         cam.update();
 
-        final float pushForce = 4f;
+        // TODO: force applied has a greatly different impact on desktop vs android. Why? Render speed I guess?
+        final float pushForce = 15f;
         if (pushDirection > 0) {
             playerBody.applyForceToCenter(pushForce, 0f, true);
         } else if (pushDirection < 0) {
@@ -146,7 +149,7 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         // Generally in a real game, dont do this in the render loop, as you are tying the physics
         // update rate to the frame rate, and vice versa
         // TODO: see comment above
-        world.step(Gdx.graphics.getDeltaTime(), 6, 2);
+        world.step(1f/60f, 6, 2);
 
         // Now update the sprite position accordingly to its now updated Physics playerBody
         // TODO: add wrapper class that manages both sprite and playerBody?
@@ -161,6 +164,10 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         sprite.draw(batch);
         batch.end();
         renderTerrain(terrain);
+
+        if (playerBody.getPosition().y < 0) {
+            ScreenManager.getInstance().showScreen(ScreenEnum.GAMEOVER);
+        }
 
     }
 
