@@ -37,36 +37,32 @@ public class GameScreen implements Screen {
     private float[] terrain;
 
     final float PIXELS_TO_METERS = 100f;
-    //final float WORLD_WIDTH = 30; // meters
-    final float WORLD_HEIGHT = 10f;
-    final float VIEWPORT_WIDTH = 30f;
+    final float VIEWPORT_WIDTH = 10f;
 
     public GameScreen() {
         setupCamera();
         setupWorld();
 
         // "PLAYER"
-        Texture txtrGameLogo = new Texture(Gdx.files.internal("badlogic.jpg"));
+        Texture txtrGameLogo = new Texture(Gdx.files.internal("ball.png"));
         sprite = new Sprite(txtrGameLogo);
+        CircleShape shape = new CircleShape();
+        final float circleRadius = 0.5f;
         DCGRacer.log.debug("sprite size = " + sprite.getWidth() + "," + sprite.getHeight());
         // Center the sprite in the top/middle of the screen
-        sprite.setSize(2f, 2f); //meters
+        sprite.setSize(circleRadius * 2f, circleRadius * 2f);
+        shape.setRadius(circleRadius);
+        DCGRacer.log.debug("sprite size = " + sprite.getWidth() + "," + sprite.getHeight());
         sprite.setPosition(cam.viewportWidth / 2 - sprite.getWidth() / 2, cam.viewportHeight / 2);
         // Now create a BodyDefinition.  This defines the physics objects type and position in the simulation
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
-        // body positions are at the center of the shape, sprit position at the bottom left corner. How convenient.
+        // body positions are at the center of the shape, sprite position at the bottom left corner. How convenient.
         bodyDef.position.set(sprite.getX() + sprite.getWidth() / 2f, sprite.getY() + sprite.getHeight() / 2f);
 
         // Create a body in the world using our definition
         body = world.createBody(bodyDef);
 
-        // Now define the dimensions of the physics shape
-        //PolygonShape shape = new PolygonShape();
-        //shape.setAsBox(sprite.getWidth()/2, sprite.getHeight()/2);
-        // let's fake a circle here for more fun terrain action, I know the sprite is square..
-        CircleShape shape = new CircleShape();
-        shape.setRadius(1f);
 
         // FixtureDef is a confusing expression for physical properties
         // Basically this is where you, in addition to defining the shape of the body
@@ -82,8 +78,8 @@ public class GameScreen implements Screen {
 
         //GROUND
         int numIterations = 9;
-        float range = 10f;
-        float scaleX = 0.0625f;
+        float range = 3f;
+        float scaleX = 0.03f;
         float scaleY = 1f;
 
         terrain = generateTerrain(numIterations, range, scaleX, scaleY);
@@ -95,13 +91,13 @@ public class GameScreen implements Screen {
         bodyDef.type = BodyDef.BodyType.StaticBody;
         bodyDef.position.set(0, 0);
 
-        Body groundBody = world.createBody(bodyDef);
+        bodyTerrain = world.createBody(bodyDef);
 
         fixtureDef = new FixtureDef();
         fixtureDef.shape = terrainShape;
         fixtureDef.density = 1f;
 
-        groundBody.createFixture(fixtureDef);
+        bodyTerrain.createFixture(fixtureDef);
 
         terrainShape.dispose();
 
