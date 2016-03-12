@@ -1,6 +1,7 @@
 package org.avontuur.dcgracer.screen;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -9,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.ChainShape;
@@ -48,7 +50,7 @@ public class GameScreen implements Screen {
         Texture txtrGameLogo = new Texture(Gdx.files.internal("ball.png"));
         sprite = new Sprite(txtrGameLogo);
         CircleShape shape = new CircleShape();
-        final float circleRadius = 0.5f;
+        final float circleRadius = 0.25f;
         DCGRacer.log.debug("sprite size = " + sprite.getWidth() + "," + sprite.getHeight());
         // Center the sprite in the top/middle of the screen
         sprite.setSize(circleRadius * 2f, circleRadius * 2f);
@@ -111,6 +113,7 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        centerCamera(delta);
         cam.update();
         batch.setProjectionMatrix(cam.combined);
 
@@ -183,6 +186,14 @@ public class GameScreen implements Screen {
         cam.update();
     }
 
+    private void centerCamera(float deltaTime) {
+        float lerp = 0.8f; //introduce slight delay in moving camera to make it less jerky
+        float deltaX = (playerBody.getPosition().x - cam.position.x) * lerp * deltaTime;
+        // never move the camera viewport beyond the left edge of the world.
+        if (cam.position.x + deltaX >= cam.viewportWidth / 2f) {
+            cam.translate(deltaX, 0f);
+        }
+    }
     private void setupWorld() {
         world = new World(new Vector2(0, -9.8f), true);
     }
