@@ -24,6 +24,7 @@ public class GameOverScreen implements Screen {
     public GameOverScreen() {
         batch = new SpriteBatch();
         font = new BitmapFont();
+        font.getData().setScale(2.0f);
         font.setColor(Color.RED);
         startTime = System.currentTimeMillis();
     }
@@ -45,7 +46,7 @@ public class GameOverScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         GlyphLayout glyphLayout = new GlyphLayout();
-        String item = "HE DEAD";
+        String item = "HE DED";
         glyphLayout.setText(font, item);
         float positionX = Gdx.graphics.getWidth() / 2 - glyphLayout.width / 2;
         float positionY = Gdx.graphics.getHeight() / 2 - glyphLayout.height / 2;
