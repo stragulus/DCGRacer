@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.input.GestureDetector.GestureListener;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -64,6 +65,9 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         shape.setRadius(circleRadius);
         DCGRacer.log.debug("sprite size = " + sprite.getWidth() + "," + sprite.getHeight());
         sprite.setPosition(cam.viewportWidth / 2 - sprite.getWidth() / 2, cam.viewportHeight / 2);
+        // Setting the origin is necessary to make rotation work correctly. Default origin is at bottom left
+        // corner, should be the center to match with box2d's rotation.
+        sprite.setOrigin(sprite.getWidth() / 2, sprite.getHeight() / 2);
         // Now create a BodyDefinition.  This defines the physics objects type and position in the simulation
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
@@ -154,6 +158,7 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         // Now update the sprite position accordingly to its now updated Physics playerBody
         // TODO: add wrapper class that manages both sprite and playerBody?
         sprite.setPosition(playerBody.getPosition().x - sprite.getWidth() / 2, playerBody.getPosition().y - sprite.getHeight() / 2);
+        sprite.setRotation(playerBody.getAngle() * MathUtils.radiansToDegrees);
         //DCGRacer.log.debug("sprite size = " + sprite.getWidth() + "," + sprite.getHeight());
         //DCGRacer.log.debug("sprite position = " + sprite.getX() + "," + sprite.getY());
 
