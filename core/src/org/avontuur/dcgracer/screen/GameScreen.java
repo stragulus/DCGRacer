@@ -238,7 +238,8 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
     private float[] generateTerrain(int numIterations, float range, float scaleX, float scaleY) {
         //just calculating and debug-outputting values for now
         float[] terrainDataPointsRaw = GameMath.midfieldDisplacement2D(numIterations, range);
-        float[] terrainDataPoints = new float[terrainDataPointsRaw.length * 2];
+        // +3 * 2: adding vertices to make it a closed simple polygon so it can be filled with a background texture
+        float[] terrainDataPoints = new float[terrainDataPointsRaw.length * 2 + 3 * 2];
 
         //convert to array of alternating x,y coordinates
         for (int i = 0; i < terrainDataPointsRaw.length; i++) {
@@ -247,9 +248,20 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
             terrainDataPoints[i * 2] = x;
             terrainDataPoints[i * 2 + 1] = y;
         }
-        //for (int i= 0; i < terrainDataPoints.length; i++) {
-        //    DCGRacer.log.debug("Terrain[" + i + "] = " + terrainDataPoints[i]);
-        //}
+
+        // add the 3 vertices to make it a closed polygon
+        int closePolygonStartIndex = terrainDataPointsRaw.length * 2;
+        // Bottom-right X, then Y
+        terrainDataPoints[closePolygonStartIndex] = terrainDataPoints[closePolygonStartIndex - 2];
+        terrainDataPoints[closePolygonStartIndex + 1 ] = 0;
+        // Bottom-left X: same as X of first coordinate
+        terrainDataPoints[closePolygonStartIndex + 2] = terrainDataPoints[0];
+        // Bottom-left Y
+        terrainDataPoints[closePolygonStartIndex + 3] = 0;
+        // Finally, close the polygon by copying the first coordinate.
+        terrainDataPoints[closePolygonStartIndex + 4] = terrainDataPoints[0];
+        terrainDataPoints[closePolygonStartIndex + 5] = terrainDataPoints[1];
+
         return terrainDataPoints;
     }
 
