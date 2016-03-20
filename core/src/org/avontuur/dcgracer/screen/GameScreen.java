@@ -79,7 +79,7 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         final float circleRadius = 0.25f;
         sprite.setSize(circleRadius * 2f, circleRadius * 2f);
         shape.setRadius(circleRadius);
-        sprite.setPosition(cam.viewportWidth / 2 - sprite.getWidth() / 2, cam.viewportHeight / 2);
+        sprite.setPosition(cam.viewportWidth / 2 - sprite.getWidth() / 2, cam.viewportHeight);
         // Setting the origin is necessary to make rotation work correctly. Default origin is at bottom left
         // corner, should be the center to match with box2d's rotation.
         sprite.setOrigin(sprite.getWidth() / 2, sprite.getHeight() / 2);
@@ -102,10 +102,10 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         // GROUND
         // ------
 
-        int numIterations = 9;
-        float range = 3f;
-        float scaleX = 0.1f;
-        float scaleY = 1f;
+        int numIterations = 10;
+        float range = 18f;
+        float scaleX = 0.02f;
+        float scaleY = 0.25f;
 
         // Generate the terrain data points - this will create the vertices for a closed simply polygon
         // representing the ground terrain.
