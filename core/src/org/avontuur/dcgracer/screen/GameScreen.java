@@ -54,8 +54,8 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
     private Body playerBody;
     private Body bodyTerrain;
 
-    private OrthographicCamera cam;
-    private OrthographicCamera terrainCam;
+    private TrackingCamera cam;
+    private TrackingCamera terrainCam;
 
     private Texture textureTerrainMud;
 
@@ -141,10 +141,16 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         //terrainRegion.setV2(2);
 
         // This appears to need a different pixels-to-meters ratio. When repeating textures, it will use the
-        // texture pixels as unit. So we need to convert those to meters. I want the ground texture to be about 2m
+        // texture pixels as unit. So we need to convert those to meters. I want the ground texture to be about 1m
         // wide, so ratio is 1m = <texture width> / 2
         terrain_ppm = textureTerrainMud.getWidth() / 2;
         terrainCam = setupCamera(terrain_ppm);
+        // 4th from last coordinate in terrain is the right-most one (yes, this is dirty, this needs a
+        // refactor of course)
+        final float terrainWidth = terrain[terrain.length - 4 * 2];
+        DCGRacer.log.debug("Terrain width = " + terrainWidth);
+        terrainCam.setBoundaryRight(terrainWidth);
+        cam.setBoundaryRight(terrainWidth);
         final float[] terrainVertices = transformVertices(terrain, terrain_ppm, terrain_ppm);
         EarClippingTriangulator triangulator = new EarClippingTriangulator();
         ShortArray triangulatedShortArray = triangulator.computeTriangles(terrainVertices);
@@ -181,9 +187,9 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
 
     @Override
     public void render(float delta) {
-        centerCamera(cam, 1, delta);
+        cam.center(playerBody, delta);
         cam.update();
-        centerCamera(terrainCam, terrain_ppm, delta);
+        terrainCam.center(playerBody, delta);
         terrainCam.update();
 
         // TODO: force applied has a greatly different impact on desktop vs android. Why? Render speed I guess?
@@ -226,11 +232,9 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
 
     @Override
     public void resize(int width, int height) {
-        cam.viewportWidth = VIEWPORT_WIDTH;
-        cam.viewportHeight = VIEWPORT_WIDTH * height / width;
+        cam.resize(VIEWPORT_WIDTH, VIEWPORT_WIDTH * height / width);
         cam.update();
-        terrainCam.viewportWidth = VIEWPORT_WIDTH * terrain_ppm;
-        terrainCam.viewportHeight = VIEWPORT_WIDTH * terrain_ppm * height / width;
+        terrainCam.resize(VIEWPORT_WIDTH, VIEWPORT_WIDTH * height / width);
         terrainCam.update();
         DCGRacer.log.debug("Resized to " + cam.viewportWidth + "," + cam.viewportHeight);
     }
@@ -260,16 +264,18 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         shapeRenderer.dispose();
     }
 
-    private OrthographicCamera setupCamera(final int units_per_meter) {
+    private TrackingCamera setupCamera(final float units_per_meter) {
         float w = Gdx.graphics.getWidth();
         float h = Gdx.graphics.getHeight();
 
-        // Constructs a new OrthographicCamera, using the given viewport width and height
+        // Constructs a new TrackingCamera, using the given viewport width and height
         // Height is multiplied by aspect ratio. The Camera's units match the Physics' world
         // units. This requires that all sprites have their world size set explicitly, so
         // that we never have to worry about pixels anymore.
-        OrthographicCamera cam = new OrthographicCamera(VIEWPORT_WIDTH * units_per_meter,
-                VIEWPORT_WIDTH * units_per_meter * (h / w));
+        float lerp = 0.95f;
+        TrackingCamera cam = new TrackingCamera(VIEWPORT_WIDTH, VIEWPORT_WIDTH * (h / w),
+                units_per_meter, lerp, true, false);
+        cam.setBoundaryLeft(0); //don't pan past the left side of the world
 
         // set camera in bottom-left corner. Position is in the center of the viewport, so adjust
         // accordingly.
@@ -278,15 +284,6 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         return cam;
     }
 
-    private void centerCamera(OrthographicCamera cam, float ppm, float deltaTime) {
-        float lerp = 0.95f; //introduce slight delay in moving camera to make it less jerky
-        float playerPosition = playerBody.getPosition().x * ppm;
-        float deltaX = (playerPosition - cam.position.x) * lerp * deltaTime;
-        // never move the camera viewport beyond the left edge of the world.
-        if (cam.position.x + deltaX >= cam.viewportWidth / 2f) {
-            cam.translate(deltaX, 0f);
-        }
-    }
     private void setupWorld() {
         world = new World(new Vector2(0, -9.8f), true);
     }
@@ -349,7 +346,6 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
     private void renderTerrain() {
         terrainBatch.setProjectionMatrix(terrainCam.combined);
         terrainBatch.begin();
-        //terrainSprite.draw(terrainBatch);
         terrainBatch.draw(terrainPolygonRegion, 0, 0);
         terrainBatch.end();
     }
