@@ -8,11 +8,16 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.PolygonRegion;
+import com.badlogic.gdx.graphics.g2d.PolygonSprite;
+import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.input.GestureDetector.GestureListener;
+import com.badlogic.gdx.math.EarClippingTriangulator;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -21,6 +26,7 @@ import com.badlogic.gdx.physics.box2d.ChainShape;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.ShortArray;
 
 import org.avontuur.dcgracer.DCGRacer;
 import org.avontuur.dcgracer.manager.ScreenEnum;
@@ -35,21 +41,33 @@ import org.avontuur.dcgracer.utils.*;
 public class GameScreen implements Screen, GestureListener, InputProcessor {
 
     private SpriteBatch batch;
+    private PolygonSpriteBatch terrainBatch;
+
     private ShapeRenderer shapeRenderer;
+
     private Sprite sprite;
+    private PolygonSprite terrainSprite;
+    private PolygonRegion terrainPolygonRegion;
+
     private World world;
+
     private Body playerBody;
     private Body bodyTerrain;
+
     private OrthographicCamera cam;
+    private OrthographicCamera terrainCam;
+
+    private Texture textureTerrainMud;
+
     private float[] terrain;
+    private int terrain_ppm; //terrain texture pixels per meter factor
 
     // game state variables
     private short pushDirection = 0;
-    final float PIXELS_TO_METERS = 100f;
     final float VIEWPORT_WIDTH = 10f;
 
     public GameScreen() {
-        setupCamera();
+        cam = setupCamera(1);
         setupWorld();
 
         // "PLAYER"
@@ -59,11 +77,8 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         sprite = new Sprite(txtrGameLogo);
         CircleShape shape = new CircleShape();
         final float circleRadius = 0.25f;
-        DCGRacer.log.debug("sprite size = " + sprite.getWidth() + "," + sprite.getHeight());
-        // Center the sprite in the top/middle of the screen
         sprite.setSize(circleRadius * 2f, circleRadius * 2f);
         shape.setRadius(circleRadius);
-        DCGRacer.log.debug("sprite size = " + sprite.getWidth() + "," + sprite.getHeight());
         sprite.setPosition(cam.viewportWidth / 2 - sprite.getWidth() / 2, cam.viewportHeight / 2);
         // Setting the origin is necessary to make rotation work correctly. Default origin is at bottom left
         // corner, should be the center to match with box2d's rotation.
@@ -79,7 +94,7 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.density = 1f;
-        fixtureDef.restitution = 0.6f; //make it bounce
+        fixtureDef.restitution = 0.6f; // Makes it bounce
         playerBody.createFixture(fixtureDef);
 
         shape.dispose();
@@ -89,11 +104,14 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
 
         int numIterations = 9;
         float range = 3f;
-        float scaleX = 0.03f;
+        float scaleX = 0.1f;
         float scaleY = 1f;
 
-        terrain = generateTerrain(numIterations, range, scaleX, scaleY);
+        // Generate the terrain data points - this will create the vertices for a closed simply polygon
+        // representing the ground terrain.
+        terrain = generateTerrainData(numIterations, range, scaleX, scaleY);
 
+        // Create the box2d representation of the terrain
         ChainShape terrainShape = new ChainShape();
         terrainShape.createChain(terrain);
 
@@ -111,6 +129,33 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
 
         terrainShape.dispose();
 
+
+        // Create the sprite for the terrain. The terrain is filled in using triangulation, which thankfully
+        // LibGDX supplies out of the box.
+        textureTerrainMud = new Texture(Gdx.files.internal("background_mud.png"));
+        textureTerrainMud.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        textureTerrainMud.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+        TextureRegion terrainRegion = new TextureRegion(textureTerrainMud);
+        //terrainRegion.setRegion(0, 0, textureTerrainMud.getWidth() * 15, textureTerrainMud.getHeight() * 15);
+        //terrainRegion.setU2(2);
+        //terrainRegion.setV2(2);
+
+        // This appears to need a different pixels-to-meters ratio. When repeating textures, it will use the
+        // texture pixels as unit. So we need to convert those to meters. I want the ground texture to be about 2m
+        // wide, so ratio is 1m = <texture width> / 2
+        terrain_ppm = textureTerrainMud.getWidth() / 2;
+        terrainCam = setupCamera(terrain_ppm);
+        final float[] terrainVertices = transformVertices(terrain, terrain_ppm, terrain_ppm);
+        EarClippingTriangulator triangulator = new EarClippingTriangulator();
+        ShortArray triangulatedShortArray = triangulator.computeTriangles(terrainVertices);
+        short[] triangles = new short[triangulatedShortArray.size];
+        for (int i = 0; i < triangulatedShortArray.size; i++)
+            triangles[i] = triangulatedShortArray.get(i);
+        terrainPolygonRegion = new PolygonRegion(terrainRegion, terrainVertices, triangles);
+        //terrainSprite = new PolygonSprite(terrainPolygonRegion);
+        //DCGRacer.log.debug("Terrain sprite size: " + terrainSprite.getWidth() + ", " + terrainSprite.getHeight());
+
+
         // INPUT HANDLING
         // --------------
 
@@ -126,6 +171,7 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         // -----
 
         batch = new SpriteBatch();
+        terrainBatch = new PolygonSpriteBatch();
         shapeRenderer = new ShapeRenderer();
     }
 
@@ -135,8 +181,10 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
 
     @Override
     public void render(float delta) {
-        centerCamera(delta);
+        centerCamera(cam, 1, delta);
         cam.update();
+        centerCamera(terrainCam, terrain_ppm, delta);
+        terrainCam.update();
 
         // TODO: force applied has a greatly different impact on desktop vs android. Why? Render speed I guess?
         final float pushForce = 15f;
@@ -168,7 +216,7 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         //batch.draw(sprite, sprite.getX(), sprite.getY());
         sprite.draw(batch);
         batch.end();
-        renderTerrain(terrain);
+        renderTerrain();
 
         if (playerBody.getPosition().y < 0) {
             ScreenManager.getInstance().showScreen(ScreenEnum.GAMEOVER);
@@ -181,6 +229,9 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         cam.viewportWidth = VIEWPORT_WIDTH;
         cam.viewportHeight = VIEWPORT_WIDTH * height / width;
         cam.update();
+        terrainCam.viewportWidth = VIEWPORT_WIDTH * terrain_ppm;
+        terrainCam.viewportHeight = VIEWPORT_WIDTH * terrain_ppm * height / width;
+        terrainCam.update();
         DCGRacer.log.debug("Resized to " + cam.viewportWidth + "," + cam.viewportHeight);
     }
 
@@ -202,12 +253,14 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
     @Override
     public void dispose() {
         sprite.getTexture().dispose();
+        textureTerrainMud.dispose();
         world.dispose();
         batch.dispose();
+        terrainBatch.dispose();
         shapeRenderer.dispose();
     }
 
-    private void setupCamera() {
+    private OrthographicCamera setupCamera(final int units_per_meter) {
         float w = Gdx.graphics.getWidth();
         float h = Gdx.graphics.getHeight();
 
@@ -215,17 +268,20 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         // Height is multiplied by aspect ratio. The Camera's units match the Physics' world
         // units. This requires that all sprites have their world size set explicitly, so
         // that we never have to worry about pixels anymore.
-        cam = new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_WIDTH * (h / w));
+        OrthographicCamera cam = new OrthographicCamera(VIEWPORT_WIDTH * units_per_meter,
+                VIEWPORT_WIDTH * units_per_meter * (h / w));
 
         // set camera in bottom-left corner. Position is in the center of the viewport, so adjust
         // accordingly.
         cam.position.set(cam.viewportWidth / 2f, cam.viewportHeight / 2f, 0);
         cam.update();
+        return cam;
     }
 
-    private void centerCamera(float deltaTime) {
-        float lerp = 0.8f; //introduce slight delay in moving camera to make it less jerky
-        float deltaX = (playerBody.getPosition().x - cam.position.x) * lerp * deltaTime;
+    private void centerCamera(OrthographicCamera cam, float ppm, float deltaTime) {
+        float lerp = 0.95f; //introduce slight delay in moving camera to make it less jerky
+        float playerPosition = playerBody.getPosition().x * ppm;
+        float deltaX = (playerPosition - cam.position.x) * lerp * deltaTime;
         // never move the camera viewport beyond the left edge of the world.
         if (cam.position.x + deltaX >= cam.viewportWidth / 2f) {
             cam.translate(deltaX, 0f);
@@ -235,7 +291,21 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         world = new World(new Vector2(0, -9.8f), true);
     }
 
-    private float[] generateTerrain(int numIterations, float range, float scaleX, float scaleY) {
+    private float[] transformVertices(float[] vertices, float scaleX, float scaleY) {
+        // This assumes each vertex' coordinate occupies 2 sequential indexes in vertices
+        float[] result = new float[vertices.length];
+
+        for (int i = 0; i < vertices.length; i++) {
+            if (i % 2 == 0) {
+                result[i] = vertices[i] * scaleX;
+            } else {
+                result[i] = vertices[i] * scaleY;
+            }
+        }
+
+        return result;
+    }
+    private float[] generateTerrainData(int numIterations, float range, float scaleX, float scaleY) {
         //just calculating and debug-outputting values for now
         float[] terrainDataPointsRaw = GameMath.midfieldDisplacement2D(numIterations, range);
         // +3 * 2: adding vertices to make it a closed simple polygon so it can be filled with a background texture
@@ -265,7 +335,7 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         return terrainDataPoints;
     }
 
-    private void renderTerrain(float[] terrain) {
+    private void renderTerrainDebug(float[] terrain) {
         shapeRenderer.setProjectionMatrix(cam.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(0, 0, 0, 1);
@@ -276,6 +346,13 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         shapeRenderer.end();
     }
 
+    private void renderTerrain() {
+        terrainBatch.setProjectionMatrix(terrainCam.combined);
+        terrainBatch.begin();
+        //terrainSprite.draw(terrainBatch);
+        terrainBatch.draw(terrainPolygonRegion, 0, 0);
+        terrainBatch.end();
+    }
     // INPUT HANDLING
 
     @Override
