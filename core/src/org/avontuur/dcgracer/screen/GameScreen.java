@@ -144,13 +144,8 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         // texture pixels as unit. So we need to convert those to meters. I want the ground texture to be about 1m
         // wide, so ratio is 1m = <texture width> / 2
         terrain_ppm = textureTerrainMud.getWidth() / 2;
-        terrainCam = setupCamera(terrain_ppm);
         // 4th from last coordinate in terrain is the right-most one (yes, this is dirty, this needs a
         // refactor of course)
-        final float terrainWidth = terrain[terrain.length - 4 * 2];
-        DCGRacer.log.debug("Terrain width = " + terrainWidth);
-        terrainCam.setBoundaryRight(terrainWidth);
-        cam.setBoundaryRight(terrainWidth);
         final float[] terrainVertices = transformVertices(terrain, terrain_ppm, terrain_ppm);
         EarClippingTriangulator triangulator = new EarClippingTriangulator();
         ShortArray triangulatedShortArray = triangulator.computeTriangles(terrainVertices);
@@ -160,6 +155,13 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         terrainPolygonRegion = new PolygonRegion(terrainRegion, terrainVertices, triangles);
         //terrainSprite = new PolygonSprite(terrainPolygonRegion);
         //DCGRacer.log.debug("Terrain sprite size: " + terrainSprite.getWidth() + ", " + terrainSprite.getHeight());
+
+        // Set camera right boundary to the width of the terrain
+        final float terrainWidth = terrain[terrain.length - 4 * 2];
+        DCGRacer.log.debug("Terrain width = " + terrainWidth);
+        terrainCam = setupCamera(terrain_ppm);
+        terrainCam.setBoundaryRight(terrainWidth);
+        cam.setBoundaryRight(terrainWidth);
 
 
         // INPUT HANDLING
