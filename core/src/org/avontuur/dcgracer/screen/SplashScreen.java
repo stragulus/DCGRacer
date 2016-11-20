@@ -10,7 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import org.avontuur.dcgracer.base.BaseScene2DScreen;
 
 /**
- * This class represents the actual game play.
+ * This class represents the splash screen displayed for a short time at game startup.
  *
  * Created by Bram Avontuur on 2016-02-28.
  */

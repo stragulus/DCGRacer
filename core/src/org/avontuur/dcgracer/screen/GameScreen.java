@@ -6,7 +6,6 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.PolygonRegion;
 import com.badlogic.gdx.graphics.g2d.PolygonSprite;
@@ -109,7 +108,7 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
 
         // Generate the terrain data points - this will create the vertices for a closed simply polygon
         // representing the ground terrain.
-        terrain = generateTerrainData(numIterations, range, scaleX, scaleY);
+        terrain = TerrainGenerator.generateTerrainData(numIterations, range, scaleX, scaleY);
 
         // Create the box2d representation of the terrain
         ChainShape terrainShape = new ChainShape();
@@ -303,35 +302,6 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         }
 
         return result;
-    }
-    private float[] generateTerrainData(int numIterations, float range, float scaleX, float scaleY) {
-        //just calculating and debug-outputting values for now
-        float[] terrainDataPointsRaw = GameMath.midfieldDisplacement2D(numIterations, range);
-        // +3 * 2: adding vertices to make it a closed simple polygon so it can be filled with a background texture
-        float[] terrainDataPoints = new float[terrainDataPointsRaw.length * 2 + 3 * 2];
-
-        //convert to array of alternating x,y coordinates
-        for (int i = 0; i < terrainDataPointsRaw.length; i++) {
-            float x = i * scaleX;
-            float y = terrainDataPointsRaw[i] * scaleY;
-            terrainDataPoints[i * 2] = x;
-            terrainDataPoints[i * 2 + 1] = y;
-        }
-
-        // add the 3 vertices to make it a closed polygon
-        int closePolygonStartIndex = terrainDataPointsRaw.length * 2;
-        // Bottom-right X, then Y
-        terrainDataPoints[closePolygonStartIndex] = terrainDataPoints[closePolygonStartIndex - 2];
-        terrainDataPoints[closePolygonStartIndex + 1 ] = 0;
-        // Bottom-left X: same as X of first coordinate
-        terrainDataPoints[closePolygonStartIndex + 2] = terrainDataPoints[0];
-        // Bottom-left Y
-        terrainDataPoints[closePolygonStartIndex + 3] = 0;
-        // Finally, close the polygon by copying the first coordinate.
-        terrainDataPoints[closePolygonStartIndex + 4] = terrainDataPoints[0];
-        terrainDataPoints[closePolygonStartIndex + 5] = terrainDataPoints[1];
-
-        return terrainDataPoints;
     }
 
     private void renderTerrainDebug(float[] terrain) {
