@@ -1,20 +1,15 @@
 package org.avontuur.dcgracer.screen;
 
-import com.badlogic.gdx.Gdx;
+import com.artemis.World;
+import com.artemis.WorldConfiguration;
+import com.artemis.WorldConfigurationBuilder;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.PolygonRegion;
-import com.badlogic.gdx.graphics.g2d.PolygonSprite;
-import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.input.GestureDetector.GestureListener;
 import com.badlogic.gdx.math.EarClippingTriangulator;
 import com.badlogic.gdx.math.MathUtils;
@@ -24,13 +19,23 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.ChainShape;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.ShortArray;
 
 import org.avontuur.dcgracer.DCGRacer;
-import org.avontuur.dcgracer.manager.ScreenEnum;
-import org.avontuur.dcgracer.manager.ScreenManager;
-import org.avontuur.dcgracer.utils.*;
+import org.avontuur.dcgracer.component.CameraID;
+import org.avontuur.dcgracer.component.Drawable;
+import org.avontuur.dcgracer.component.Physics;
+import org.avontuur.dcgracer.manager.ResourceManager;
+import org.avontuur.dcgracer.system.Box2dWorldSystem;
+import org.avontuur.dcgracer.system.CameraEnum;
+import org.avontuur.dcgracer.system.CameraUpdateSystem;
+import org.avontuur.dcgracer.system.ComponentMapperSystem;
+import org.avontuur.dcgracer.system.GameOverSystem;
+import org.avontuur.dcgracer.system.MotionSystem;
+import org.avontuur.dcgracer.system.RenderingSystem;
+import org.avontuur.dcgracer.system.SpritePositionSystem;
+import org.avontuur.dcgracer.utils.TerrainGenerator;
+import org.avontuur.dcgracer.utils.TrackingCamera;
 
 /**
  * Created by Bram Avontuur on 2016-03-01.
@@ -39,6 +44,8 @@ import org.avontuur.dcgracer.utils.*;
  */
 public class GameScreen implements Screen, GestureListener, InputProcessor {
 
+    /*
+     * TODO: Deprecate all state here
     private SpriteBatch batch;
     private PolygonSpriteBatch terrainBatch;
 
@@ -47,8 +54,6 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
     private Sprite sprite;
     private PolygonSprite terrainSprite;
     private PolygonRegion terrainPolygonRegion;
-
-    private World world;
 
     private Body playerBody;
     private Body bodyTerrain;
@@ -60,24 +65,69 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
 
     private float[] terrain;
     private int terrain_ppm; //terrain texture pixels per meter factor
+     */
 
     // game state variables
     private short pushDirection = 0;
     final float VIEWPORT_WIDTH = 10f;
 
+    // Maximum frame time still acceptable for reliable physics processing
+    public static final float MAX_FRAME_TIME = 1 / 15f;
+
+    private World artemisWorld;
+
     public GameScreen() {
-        cam = setupCamera(1);
-        setupWorld();
+    }
 
-        // "PLAYER"
-        // --------
+    private World createWorld() {
+        // Creates a World in the context of Artemis-odb's Entity Component System
+        WorldConfiguration worldConfig = new WorldConfigurationBuilder()
+                .with(new ComponentMapperSystem())
+                .with(new Box2dWorldSystem())
+                .with(new MotionSystem())
+                .with(new SpritePositionSystem())
+                .with(new CameraUpdateSystem(VIEWPORT_WIDTH))
+                .with(new RenderingSystem())
+                .with(new GameOverSystem())
+                .build();
 
-        Texture txtrGameLogo = new Texture(Gdx.files.internal("ball.png"));
-        sprite = new Sprite(txtrGameLogo);
+        return new World(worldConfig);
+    }
+
+    @Override
+    public void show() {
+        if (artemisWorld == null){
+            DCGRacer.log.info("Creating The World");
+            artemisWorld = createWorld();
+            createPlayerEntity();
+            createLandscapeEntity();
+        }
+
+    }
+
+    @Override
+    public void render(float delta) {
+        // Cap delta spikes to prevent crazy world updates
+        if (artemisWorld != null) {
+            artemisWorld.setDelta(MathUtils.clamp(delta, 0, MAX_FRAME_TIME));
+            artemisWorld.process();
+        } else {
+            throw new RuntimeException("World has not been created");
+        }
+    }
+
+    private void createPlayerEntity() {
+        Box2dWorldSystem box2dSystem = artemisWorld.getSystem(Box2dWorldSystem.class);
+        CameraUpdateSystem cameraUpdateSystem = artemisWorld.getSystem(CameraUpdateSystem.class);
+        ComponentMapperSystem mappers = artemisWorld.getSystem(ComponentMapperSystem.class);
+
+        Texture gameLogo = ResourceManager.instance.gameLogo;
+        Sprite sprite = new Sprite(gameLogo);
         CircleShape shape = new CircleShape();
         final float circleRadius = 0.25f;
         sprite.setSize(circleRadius * 2f, circleRadius * 2f);
         shape.setRadius(circleRadius);
+        TrackingCamera cam = cameraUpdateSystem.getCamera(CameraEnum.STANDARD);
         sprite.setPosition(cam.viewportWidth / 2 - sprite.getWidth() / 2, cam.viewportHeight);
         // Setting the origin is necessary to make rotation work correctly. Default origin is at bottom left
         // corner, should be the center to match with box2d's rotation.
@@ -88,7 +138,7 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         // playerBody positions are at the center of the shape, sprite position at the bottom left corner. How convenient.
         bodyDef.position.set(sprite.getX() + sprite.getWidth() / 2f, sprite.getY() + sprite.getHeight() / 2f);
 
-        playerBody = world.createBody(bodyDef);
+        Body playerBody = box2dSystem.getBox2DWorld().createBody(bodyDef);
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
@@ -98,8 +148,22 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
 
         shape.dispose();
 
-        // GROUND
-        // ------
+        // TODO: This looks horrible. Is this really the way to go forward?
+        int e = artemisWorld.create();
+        CameraID cameraID = mappers.cameraIDComponents.create(e);
+        cameraID.cameraID = CameraEnum.STANDARD;
+        Physics physics = mappers.physicsComponents.create(e);
+        physics.body = playerBody;
+        mappers.mainPlayerComponents.create(e);
+        Drawable drawable = mappers.drawableComponents.create(e);
+        drawable.sprite = sprite;
+        // TODO: add player input, including the system
+    }
+
+    private void createLandscapeEntity() {
+        Box2dWorldSystem box2dSystem = artemisWorld.getSystem(Box2dWorldSystem.class);
+        CameraUpdateSystem cameraUpdateSystem = artemisWorld.getSystem(CameraUpdateSystem.class);
+        ComponentMapperSystem mappers = artemisWorld.getSystem(ComponentMapperSystem.class);
 
         int numIterations = 10;
         float range = 18f;
@@ -108,19 +172,20 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
 
         // Generate the terrain data points - this will create the vertices for a closed simply polygon
         // representing the ground terrain.
+        float[] terrain;
         terrain = TerrainGenerator.generateTerrainData(numIterations, range, scaleX, scaleY);
 
         // Create the box2d representation of the terrain
         ChainShape terrainShape = new ChainShape();
         terrainShape.createChain(terrain);
 
-        bodyDef = new BodyDef();
+        BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.StaticBody;
         bodyDef.position.set(0, 0);
 
-        bodyTerrain = world.createBody(bodyDef);
+        Body bodyTerrain = box2dSystem.getBox2DWorld().createBody(bodyDef);
 
-        fixtureDef = new FixtureDef();
+        FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = terrainShape;
         fixtureDef.density = 1f;
 
@@ -131,7 +196,7 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
 
         // Create the sprite for the terrain. The terrain is filled in using triangulation, which thankfully
         // LibGDX supplies out of the box.
-        textureTerrainMud = new Texture(Gdx.files.internal("background_mud.png"));
+        Texture textureTerrainMud = ResourceManager.instance.textureTerrainMud;
         textureTerrainMud.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         textureTerrainMud.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
         TextureRegion terrainRegion = new TextureRegion(textureTerrainMud);
@@ -142,7 +207,7 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         // This appears to need a different pixels-to-meters ratio. When repeating textures, it will use the
         // texture pixels as unit. So we need to convert those to meters. I want the ground texture to be about 1m
         // wide, so ratio is 1m = <texture width> / 2
-        terrain_ppm = textureTerrainMud.getWidth() / 2;
+        int terrain_ppm = textureTerrainMud.getWidth() / 2;
         // 4th from last coordinate in terrain is the right-most one (yes, this is dirty, this needs a
         // refactor of course)
         final float[] terrainVertices = transformVertices(terrain, terrain_ppm, terrain_ppm);
@@ -151,18 +216,31 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         short[] triangles = new short[triangulatedShortArray.size];
         for (int i = 0; i < triangulatedShortArray.size; i++)
             triangles[i] = triangulatedShortArray.get(i);
-        terrainPolygonRegion = new PolygonRegion(terrainRegion, terrainVertices, triangles);
-        //terrainSprite = new PolygonSprite(terrainPolygonRegion);
-        //DCGRacer.log.debug("Terrain sprite size: " + terrainSprite.getWidth() + ", " + terrainSprite.getHeight());
+        PolygonRegion terrainPolygonRegion = new PolygonRegion(terrainRegion, terrainVertices, triangles);
+
+        // Create entity
+        int e = artemisWorld.create();
+        CameraID cameraID = mappers.cameraIDComponents.create(e);
+        cameraID.cameraID = CameraEnum.TERRAIN;
+        Physics physics = mappers.physicsComponents.create(e);
+        physics.body = bodyTerrain;
+        Drawable drawable = mappers.drawableComponents.create(e);
+        drawable.polygonRegion = terrainPolygonRegion;
 
         // Set camera right boundary to the width of the terrain
+        // TODO: Move this to CameraUpdateSystem (or call a method there) (after the splitup into 2 systems for
+        //       sprites & polygons)
         final float terrainWidth = terrain[terrain.length - 4 * 2];
         DCGRacer.log.debug("Terrain width = " + terrainWidth);
-        terrainCam = setupCamera(terrain_ppm);
+        TrackingCamera terrainCam = cameraUpdateSystem.getCamera(CameraEnum.TERRAIN);
         terrainCam.setBoundaryRight(terrainWidth);
+        TrackingCamera cam = cameraUpdateSystem.getCamera(CameraEnum.STANDARD);
         cam.setBoundaryRight(terrainWidth);
-
-
+    }
+    /**
+     * @Deprecated
+    private void GameScreenDeprecated() {
+        // TODO: Split me up into systems and remove me
         // INPUT HANDLING
         // --------------
 
@@ -173,21 +251,12 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
 
 
         Gdx.input.setInputProcessor(im);
-
-        // OTHER
-        // -----
-
-        batch = new SpriteBatch();
-        terrainBatch = new PolygonSpriteBatch();
-        shapeRenderer = new ShapeRenderer();
     }
+     */
 
-    @Override
-    public void show() {
-    }
-
-    @Override
-    public void render(float delta) {
+    /**
+     * @Deprecated
+    public void renderDeprecated(float delta) {
         cam.center(playerBody, delta);
         cam.update();
         terrainCam.center(playerBody, delta);
@@ -230,11 +299,16 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         }
 
     }
+     */
 
     @Override
     public void resize(int width, int height) {
+        //TODO call resize on the cameraUpdateSystems
+        CameraUpdateSystem cameraUpdateSystem = artemisWorld.getSystem(CameraUpdateSystem.class);
+        TrackingCamera cam = cameraUpdateSystem.getCamera(CameraEnum.STANDARD);
         cam.resize(VIEWPORT_WIDTH, VIEWPORT_WIDTH * height / width);
         cam.update();
+        TrackingCamera terrainCam = cameraUpdateSystem.getCamera(CameraEnum.TERRAIN);
         terrainCam.resize(VIEWPORT_WIDTH, VIEWPORT_WIDTH * height / width);
         terrainCam.update();
         DCGRacer.log.debug("Resized to " + cam.viewportWidth + "," + cam.viewportHeight);
@@ -257,36 +331,6 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
 
     @Override
     public void dispose() {
-        sprite.getTexture().dispose();
-        textureTerrainMud.dispose();
-        world.dispose();
-        batch.dispose();
-        terrainBatch.dispose();
-        shapeRenderer.dispose();
-    }
-
-    private TrackingCamera setupCamera(final float units_per_meter) {
-        float w = Gdx.graphics.getWidth();
-        float h = Gdx.graphics.getHeight();
-
-        // Constructs a new TrackingCamera, using the given viewport width and height
-        // Height is multiplied by aspect ratio. The Camera's units match the Physics' world
-        // units. This requires that all sprites have their world size set explicitly, so
-        // that we never have to worry about pixels anymore.
-        float lerp = 0.95f;
-        TrackingCamera cam = new TrackingCamera(VIEWPORT_WIDTH, VIEWPORT_WIDTH * (h / w),
-                units_per_meter, lerp, true, false);
-        cam.setBoundaryLeft(0); //don't pan past the left side of the world
-
-        // set camera in bottom-left corner. Position is in the center of the viewport, so adjust
-        // accordingly.
-        cam.position.set(cam.viewportWidth / 2f, cam.viewportHeight / 2f, 0);
-        cam.update();
-        return cam;
-    }
-
-    private void setupWorld() {
-        world = new World(new Vector2(0, -9.8f), true);
     }
 
     private float[] transformVertices(float[] vertices, float scaleX, float scaleY) {
@@ -304,23 +348,6 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         return result;
     }
 
-    private void renderTerrainDebug(float[] terrain) {
-        shapeRenderer.setProjectionMatrix(cam.combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(0, 0, 0, 1);
-        // terrain is always of even length
-        for (int i = 0; i < terrain.length - 2; i += 2) {
-            shapeRenderer.line(terrain[i], terrain[i + 1], terrain[i + 2], terrain[i + 3]);
-        }
-        shapeRenderer.end();
-    }
-
-    private void renderTerrain() {
-        terrainBatch.setProjectionMatrix(terrainCam.combined);
-        terrainBatch.begin();
-        terrainBatch.draw(terrainPolygonRegion, 0, 0);
-        terrainBatch.end();
-    }
     // INPUT HANDLING
 
     @Override

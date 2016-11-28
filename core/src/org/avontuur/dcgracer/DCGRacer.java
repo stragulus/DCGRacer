@@ -4,12 +4,14 @@ import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Logger;
 import com.badlogic.gdx.utils.Timer;
 
+import org.avontuur.dcgracer.manager.ResourceManager;
 import org.avontuur.dcgracer.manager.ScreenEnum;
 import org.avontuur.dcgracer.manager.ScreenManager;
 
@@ -34,8 +36,11 @@ public class DCGRacer extends Game {
 
         final long splash_start_time = System.currentTimeMillis();
 
+        // load resources here, while the splash screen is being displayed.
+        ResourceManager.instance.loadAll();
+
         // Show the splash screen for at least a few seconds so users will see it.
-        // The splash screen does not depened on resource loading (e.g. ResourceManager)
+        // The splash screen does not depend on resource loading (e.g. ResourceManager)
         // so it will load fast. Any resources being loaded can now load while the splash
         // screen is already being displayed.
         new Thread(new Runnable() {
