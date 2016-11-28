@@ -4,6 +4,7 @@ import com.artemis.Aspect;
 import com.artemis.ComponentMapper;
 import com.artemis.systems.IteratingSystem;
 
+import org.avontuur.dcgracer.DCGRacer;
 import org.avontuur.dcgracer.component.Motion;
 import org.avontuur.dcgracer.component.Physics;
 

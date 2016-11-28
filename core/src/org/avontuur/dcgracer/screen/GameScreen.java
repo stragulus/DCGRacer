@@ -88,6 +88,7 @@ public class GameScreen implements Screen {
         WorldConfiguration worldConfig = new WorldConfigurationBuilder()
                 .with(new ComponentMapperSystem())
                 .with(new Box2dWorldSystem())
+                .with(new PlayerInputSystem())
                 .with(new MotionSystem())
                 .with(new SpritePositionSystem())
                 .with(new CameraUpdateSystem(VIEWPORT_WIDTH))
@@ -114,7 +115,7 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         // Cap delta spikes to prevent crazy world updates
         if (artemisWorld != null) {
-            artemisWorld.setDelta(MathUtils.clamp(delta, 0, MAX_FRAME_TIME));
+            //artemisWorld.setDelta(MathUtils.clamp(delta, 0, MAX_FRAME_TIME));
             artemisWorld.process();
         } else {
             throw new RuntimeException("World has not been created");
@@ -163,14 +164,15 @@ public class GameScreen implements Screen {
 
         // TODO: This looks horrible. Is this really the way to go forward?
         int e = artemisWorld.create();
+        mappers.mainPlayerComponents.create(e);
+        mappers.playerInputComponents.create(e);
+        mappers.motionComponents.create(e);
         CameraID cameraID = mappers.cameraIDComponents.create(e);
         cameraID.cameraID = CameraEnum.STANDARD;
         Physics physics = mappers.physicsComponents.create(e);
         physics.body = playerBody;
-        mappers.mainPlayerComponents.create(e);
         Drawable drawable = mappers.drawableComponents.create(e);
         drawable.sprite = sprite;
-        // TODO: add player input, including the system
     }
 
     private void createLandscapeEntity() {

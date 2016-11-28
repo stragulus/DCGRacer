@@ -8,6 +8,7 @@ import org.avontuur.dcgracer.component.Drawable;
 import org.avontuur.dcgracer.component.MainPlayer;
 import org.avontuur.dcgracer.component.Motion;
 import org.avontuur.dcgracer.component.Physics;
+import org.avontuur.dcgracer.component.PlayerInput;
 
 /**
  * Placeholder system for all the various component mappers used throughout the game.
@@ -21,6 +22,7 @@ public class ComponentMapperSystem extends BaseSystem {
     public ComponentMapper<Drawable> drawableComponents;
     public ComponentMapper<CameraID> cameraIDComponents;
     public ComponentMapper<Motion> motionComponents;
+    public ComponentMapper<PlayerInput> playerInputComponents;
 
 
     public ComponentMapperSystem() {

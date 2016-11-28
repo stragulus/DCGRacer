@@ -9,6 +9,8 @@ package org.avontuur.dcgracer.manager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 
+import org.avontuur.dcgracer.DCGRacer;
+
 public class ResourceManager {
     public static final ResourceManager instance = new ResourceManager();
 
@@ -32,8 +34,10 @@ public class ResourceManager {
     }
 
     public void loadAll() {
+        DCGRacer.log.info("Loading resources");
         loadMusic();
         loadSoundEffects();
         loadTextures();
+        DCGRacer.log.info("Loaded all resources");
     }
 }

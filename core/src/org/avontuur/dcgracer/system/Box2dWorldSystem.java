@@ -10,7 +10,7 @@ import com.badlogic.gdx.physics.box2d.World;
  * System that manages the Box2D physics world and keeps it ticking
  */
 public class Box2dWorldSystem extends BaseSystem {
-    private static final float GRAVITY = -0.8f;
+    private static final float GRAVITY = -9.8f;
 
     private World box2DWorld;
 
@@ -26,10 +26,10 @@ public class Box2dWorldSystem extends BaseSystem {
         // Advance the world, by the amount of time that has elapsed since the last frame
         // Generally in a real game, don't do this in the render loop, as you are tying the physics
         // update rate to the frame rate, and vice versa
-        // TODO: see comment above, finetune these parameters.
+        // TODO: see comment above, fine-tune these parameters.
         float gameLoopDelta = world.getDelta();
-        //box2DWorld.step(1f/60f, 6, 2);
-        box2DWorld.step(gameLoopDelta, 6, 2);
+        box2DWorld.step(1f/60f, 6, 2);
+        //box2DWorld.step(gameLoopDelta, 6, 2);
 
         // Example taken from other game (and read about this in the box2d docs somewhere):
         /*

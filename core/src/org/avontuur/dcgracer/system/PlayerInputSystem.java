@@ -8,6 +8,7 @@ import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 
+import org.avontuur.dcgracer.DCGRacer;
 import org.avontuur.dcgracer.component.Motion;
 import org.avontuur.dcgracer.component.PlayerInput;
 
