@@ -3,13 +3,16 @@ package org.avontuur.dcgracer.screen;
 import com.artemis.World;
 import com.artemis.WorldConfiguration;
 import com.artemis.WorldConfigurationBuilder;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.PolygonRegion;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.input.GestureDetector.GestureListener;
 import com.badlogic.gdx.math.EarClippingTriangulator;
 import com.badlogic.gdx.math.MathUtils;
@@ -32,6 +35,7 @@ import org.avontuur.dcgracer.system.CameraUpdateSystem;
 import org.avontuur.dcgracer.system.ComponentMapperSystem;
 import org.avontuur.dcgracer.system.GameOverSystem;
 import org.avontuur.dcgracer.system.MotionSystem;
+import org.avontuur.dcgracer.system.PlayerInputSystem;
 import org.avontuur.dcgracer.system.RenderingSystem;
 import org.avontuur.dcgracer.system.SpritePositionSystem;
 import org.avontuur.dcgracer.utils.TerrainGenerator;
@@ -42,7 +46,7 @@ import org.avontuur.dcgracer.utils.TrackingCamera;
  *
  * This class represents the actual game.
  */
-public class GameScreen implements Screen, GestureListener, InputProcessor {
+public class GameScreen implements Screen {
 
     /*
      * TODO: Deprecate all state here
@@ -101,6 +105,7 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
             artemisWorld = createWorld();
             createPlayerEntity();
             createLandscapeEntity();
+            setupInput();
         }
 
     }
@@ -114,6 +119,14 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         } else {
             throw new RuntimeException("World has not been created");
         }
+    }
+
+    private void setupInput() {
+        PlayerInputSystem inputSystem = artemisWorld.getSystem(PlayerInputSystem.class);
+        InputMultiplexer im = new InputMultiplexer();
+        im.addProcessor(new GestureDetector(inputSystem));
+        im.addProcessor(inputSystem);
+        Gdx.input.setInputProcessor(im);
     }
 
     private void createPlayerEntity() {
@@ -244,13 +257,6 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         // INPUT HANDLING
         // --------------
 
-        InputMultiplexer im = new InputMultiplexer();
-        GestureDetector gd = new GestureDetector(this);
-        im.addProcessor(gd);
-        im.addProcessor(this);
-
-
-        Gdx.input.setInputProcessor(im);
     }
      */
 
@@ -348,101 +354,4 @@ public class GameScreen implements Screen, GestureListener, InputProcessor {
         return result;
     }
 
-    // INPUT HANDLING
-
-    @Override
-    public boolean touchDown(float x, float y, int pointer, int button) {
-        return false;
-    }
-
-    @Override
-    public boolean tap(float x, float y, int count, int button) {
-        return false;
-    }
-
-    @Override
-    public boolean longPress(float x, float y) {
-        return false;
-    }
-
-    @Override
-    public boolean fling(float velocityX, float velocityY, int button) {
-        if (velocityX > 0) {
-            pushDirection = 1;
-            return true;
-        } else if (velocityX < 0) {
-            pushDirection = -1;
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean pan(float x, float y, float deltaX, float deltaY) {
-        return false;
-    }
-
-    @Override
-    public boolean panStop(float x, float y, int pointer, int button) {
-        return false;
-    }
-
-    @Override
-    public boolean zoom(float initialDistance, float distance) {
-        return false;
-    }
-
-    @Override
-    public boolean pinch(Vector2 initialPointer1, Vector2 initialPointer2, Vector2 pointer1, Vector2 pointer2) {
-        return false;
-    }
-
-    @Override
-    public boolean keyDown(int keycode) {
-        return false;
-    }
-
-    @Override
-    public boolean keyUp(int keycode) {
-        if (keycode == Input.Keys.RIGHT) {
-            pushDirection = 1;
-            return true;
-        } else if (keycode == Input.Keys.LEFT) {
-            pushDirection = -1;
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean keyTyped(char character) {
-        return false;
-    }
-
-    @Override
-    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        return false;
-    }
-
-    @Override
-    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        return false;
-    }
-
-    @Override
-    public boolean touchDragged(int screenX, int screenY, int pointer) {
-        return false;
-    }
-
-    @Override
-    public boolean mouseMoved(int screenX, int screenY) {
-        return false;
-    }
-
-    @Override
-    public boolean scrolled(int amount) {
-        return false;
-    }
 }

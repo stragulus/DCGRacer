@@ -12,5 +12,7 @@ import com.badlogic.gdx.math.Vector2;
 public class Motion extends Component {
     public Vector2 force;
 
-    public Motion() {}
+    public Motion() {
+        force = new Vector2(0, 0);
+    }
 }
