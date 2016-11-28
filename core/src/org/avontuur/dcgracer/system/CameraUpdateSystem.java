@@ -6,6 +6,7 @@ import com.artemis.systems.IteratingSystem;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.physics.box2d.Body;
 
+import org.avontuur.dcgracer.DCGRacer;
 import org.avontuur.dcgracer.component.MainPlayer;
 import org.avontuur.dcgracer.component.Physics;
 import org.avontuur.dcgracer.manager.ResourceManager;
@@ -30,6 +31,28 @@ public class CameraUpdateSystem extends IteratingSystem {
         super(Aspect.all(Physics.class, MainPlayer.class));
 
         this.viewportWidth = viewportWidth;
+    }
+
+    @Override
+    protected void initialize() {
+        super.initialize();
+
+        cam = setupCamera(1);
+
+        // Drawing the terrain appears to need a different pixels-to-meters ratio. With repeating textures, it will
+        // use the texture pixels as unit. So we need to convert those to meters. I want the ground texture to be about 1m
+        // wide, so ratio is 1m = <texture width> / 2
+        float terrainPPM = ResourceManager.instance.textureTerrainMud.getWidth() / 2;
+        terrainCam = setupCamera(terrainPPM);
+    }
+
+    @Override
+    protected void process(int entityId) {
+        Body playerBody = mappers.physicsComponents.get(entityId).body;
+        cam.center(playerBody, world.getDelta());
+        cam.update();
+        terrainCam.center(playerBody, world.getDelta());
+        terrainCam.update();
     }
 
     /**
@@ -69,25 +92,4 @@ public class CameraUpdateSystem extends IteratingSystem {
     }
 
 
-    @Override
-    protected void initialize() {
-        super.initialize();
-
-        cam = setupCamera(1);
-
-        // Drawing the terrain appears to need a different pixels-to-meters ratio. With repeating textures, it will
-        // use the texture pixels as unit. So we need to convert those to meters. I want the ground texture to be about 1m
-        // wide, so ratio is 1m = <texture width> / 2
-        float terrainPPM = ResourceManager.instance.textureTerrainMud.getWidth() / 2;
-        terrainCam = setupCamera(terrainPPM);
-    }
-
-    @Override
-    protected void process(int entityId) {
-        Body playerBody = mappers.physicsComponents.get(entityId).body;
-        cam.center(playerBody, world.getDelta());
-        cam.update();
-        terrainCam.center(playerBody, world.getDelta());
-        terrainCam.update();
-    }
 }

@@ -28,8 +28,8 @@ public class Box2dWorldSystem extends BaseSystem {
         // update rate to the frame rate, and vice versa
         // TODO: see comment above, fine-tune these parameters.
         float gameLoopDelta = world.getDelta();
-        box2DWorld.step(1f/60f, 6, 2);
-        //box2DWorld.step(gameLoopDelta, 6, 2);
+        //box2DWorld.step(1f/60f, 6, 2);
+        box2DWorld.step(gameLoopDelta, 6, 2);
 
         // Example taken from other game (and read about this in the box2d docs somewhere):
         /*

@@ -115,7 +115,7 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         // Cap delta spikes to prevent crazy world updates
         if (artemisWorld != null) {
-            //artemisWorld.setDelta(MathUtils.clamp(delta, 0, MAX_FRAME_TIME));
+            artemisWorld.setDelta(MathUtils.clamp(delta, 0, MAX_FRAME_TIME));
             artemisWorld.process();
         } else {
             throw new RuntimeException("World has not been created");
@@ -252,62 +252,6 @@ public class GameScreen implements Screen {
         TrackingCamera cam = cameraUpdateSystem.getCamera(CameraEnum.STANDARD);
         cam.setBoundaryRight(terrainWidth);
     }
-    /**
-     * @Deprecated
-    private void GameScreenDeprecated() {
-        // TODO: Split me up into systems and remove me
-        // INPUT HANDLING
-        // --------------
-
-    }
-     */
-
-    /**
-     * @Deprecated
-    public void renderDeprecated(float delta) {
-        cam.center(playerBody, delta);
-        cam.update();
-        terrainCam.center(playerBody, delta);
-        terrainCam.update();
-
-        // TODO: force applied has a greatly different impact on desktop vs android. Why? Render speed I guess?
-        final float pushForce = 15f;
-        if (pushDirection > 0) {
-            playerBody.applyForceToCenter(pushForce, 0f, true);
-        } else if (pushDirection < 0) {
-            playerBody.applyForceToCenter(-pushForce, 0f, true);
-        }
-        pushDirection = 0; //reset after each event!
-
-        batch.setProjectionMatrix(cam.combined);
-
-        // Advance the world, by the amount of time that has elapsed since the last frame
-        // Generally in a real game, dont do this in the render loop, as you are tying the physics
-        // update rate to the frame rate, and vice versa
-        // TODO: see comment above
-        world.step(1f/60f, 6, 2);
-
-        // Now update the sprite position accordingly to its now updated Physics playerBody
-        // TODO: add wrapper class that manages both sprite and playerBody?
-        sprite.setPosition(playerBody.getPosition().x - sprite.getWidth() / 2, playerBody.getPosition().y - sprite.getHeight() / 2);
-        sprite.setRotation(playerBody.getAngle() * MathUtils.radiansToDegrees);
-        //DCGRacer.log.debug("sprite size = " + sprite.getWidth() + "," + sprite.getHeight());
-        //DCGRacer.log.debug("sprite position = " + sprite.getX() + "," + sprite.getY());
-
-        Gdx.gl.glClearColor(1, 1, 1, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        batch.begin();
-        //batch.draw(sprite, sprite.getX(), sprite.getY());
-        sprite.draw(batch);
-        batch.end();
-        renderTerrain();
-
-        if (playerBody.getPosition().y < 0) {
-            ScreenManager.getInstance().showScreen(ScreenEnum.GAMEOVER);
-        }
-
-    }
-     */
 
     @Override
     public void resize(int width, int height) {
