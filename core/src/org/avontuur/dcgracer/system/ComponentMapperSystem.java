@@ -4,11 +4,12 @@ import com.artemis.BaseSystem;
 import com.artemis.ComponentMapper;
 
 import org.avontuur.dcgracer.component.CameraID;
-import org.avontuur.dcgracer.component.Drawable;
 import org.avontuur.dcgracer.component.MainPlayer;
 import org.avontuur.dcgracer.component.Motion;
 import org.avontuur.dcgracer.component.Physics;
 import org.avontuur.dcgracer.component.PlayerInput;
+import org.avontuur.dcgracer.component.PolygonRegion;
+import org.avontuur.dcgracer.component.Sprite;
 
 /**
  * Placeholder system for all the various component mappers used throughout the game.
@@ -19,10 +20,11 @@ import org.avontuur.dcgracer.component.PlayerInput;
 public class ComponentMapperSystem extends BaseSystem {
     public ComponentMapper<Physics> physicsComponents;
     public ComponentMapper<MainPlayer> mainPlayerComponents;
-    public ComponentMapper<Drawable> drawableComponents;
     public ComponentMapper<CameraID> cameraIDComponents;
     public ComponentMapper<Motion> motionComponents;
     public ComponentMapper<PlayerInput> playerInputComponents;
+    public ComponentMapper<Sprite> spriteComponents;
+    public ComponentMapper<PolygonRegion> polygonRegionComponents;
 
 
     public ComponentMapperSystem() {

@@ -4,19 +4,15 @@ import com.artemis.World;
 import com.artemis.WorldConfiguration;
 import com.artemis.WorldConfigurationBuilder;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.PolygonRegion;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.input.GestureDetector;
-import com.badlogic.gdx.input.GestureDetector.GestureListener;
 import com.badlogic.gdx.math.EarClippingTriangulator;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.ChainShape;
@@ -25,8 +21,6 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.utils.ShortArray;
 
 import org.avontuur.dcgracer.DCGRacer;
-import org.avontuur.dcgracer.component.CameraID;
-import org.avontuur.dcgracer.component.Drawable;
 import org.avontuur.dcgracer.component.Physics;
 import org.avontuur.dcgracer.manager.ResourceManager;
 import org.avontuur.dcgracer.system.Box2dWorldSystem;
@@ -36,8 +30,10 @@ import org.avontuur.dcgracer.system.ComponentMapperSystem;
 import org.avontuur.dcgracer.system.GameOverSystem;
 import org.avontuur.dcgracer.system.MotionSystem;
 import org.avontuur.dcgracer.system.PlayerInputSystem;
-import org.avontuur.dcgracer.system.RenderingSystem;
+import org.avontuur.dcgracer.system.PolygonRegionRenderingSystem;
+import org.avontuur.dcgracer.system.RenderCanvasSystem;
 import org.avontuur.dcgracer.system.SpritePositionSystem;
+import org.avontuur.dcgracer.system.SpriteRenderingSystem;
 import org.avontuur.dcgracer.utils.TerrainGenerator;
 import org.avontuur.dcgracer.utils.TrackingCamera;
 
@@ -92,7 +88,9 @@ public class GameScreen implements Screen {
                 .with(new MotionSystem())
                 .with(new SpritePositionSystem())
                 .with(new CameraUpdateSystem(VIEWPORT_WIDTH))
-                .with(new RenderingSystem())
+                .with(new RenderCanvasSystem())
+                .with(new SpriteRenderingSystem())
+                .with(new PolygonRegionRenderingSystem())
                 .with(new GameOverSystem())
                 .build();
 
@@ -167,12 +165,10 @@ public class GameScreen implements Screen {
         mappers.mainPlayerComponents.create(e);
         mappers.playerInputComponents.create(e);
         mappers.motionComponents.create(e);
-        CameraID cameraID = mappers.cameraIDComponents.create(e);
-        cameraID.cameraID = CameraEnum.STANDARD;
         Physics physics = mappers.physicsComponents.create(e);
         physics.body = playerBody;
-        Drawable drawable = mappers.drawableComponents.create(e);
-        drawable.sprite = sprite;
+        org.avontuur.dcgracer.component.Sprite spriteComponent = mappers.spriteComponents.create(e);
+        spriteComponent.sprite = sprite;
     }
 
     private void createLandscapeEntity() {
@@ -235,12 +231,11 @@ public class GameScreen implements Screen {
 
         // Create entity
         int e = artemisWorld.create();
-        CameraID cameraID = mappers.cameraIDComponents.create(e);
-        cameraID.cameraID = CameraEnum.TERRAIN;
         Physics physics = mappers.physicsComponents.create(e);
         physics.body = bodyTerrain;
-        Drawable drawable = mappers.drawableComponents.create(e);
-        drawable.polygonRegion = terrainPolygonRegion;
+        org.avontuur.dcgracer.component.PolygonRegion polygonRegionComponent =
+                mappers.polygonRegionComponents.create(e);
+        polygonRegionComponent.polygonRegion = terrainPolygonRegion;
 
         // Set camera right boundary to the width of the terrain
         // TODO: Move this to CameraUpdateSystem (or call a method there) (after the splitup into 2 systems for

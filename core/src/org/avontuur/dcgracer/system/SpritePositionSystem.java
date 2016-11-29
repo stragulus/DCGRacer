@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Body;
 
-import org.avontuur.dcgracer.component.Drawable;
 import org.avontuur.dcgracer.component.Physics;
 
 /**
@@ -20,12 +19,12 @@ public class SpritePositionSystem extends IteratingSystem {
     private ComponentMapperSystem mappers;
 
     public SpritePositionSystem() {
-        super(Aspect.all(Drawable.class, Physics.class));
+        super(Aspect.all(org.avontuur.dcgracer.component.Sprite.class, Physics.class));
     }
 
     @Override
     protected void process(int entityId) {
-        Sprite sprite = mappers.drawableComponents.get(entityId).sprite;
+        Sprite sprite = mappers.spriteComponents.get(entityId).sprite;
         Body body = mappers.physicsComponents.get(entityId).body;
 
         /**

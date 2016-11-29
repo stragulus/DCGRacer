@@ -14,9 +14,10 @@ public abstract class TerrainGenerator {
      * @param range
      *        Upper range of the terrain data.
      * @param scaleX
-     *        Multiply x coordinates by this factor; essentially moves data points closer together or further apart.
+     *        Multiply x coordinates by this factor; essentially moves data points closer together (<1)
+     *        or further apart (>1).
      * @param scaleY
-     *        Multiple y coordinates by this factor; allows one to stretch or condense the vertical range.
+     *        Multiple y coordinates by this factor; allows one to stretch (>1) or condense (<1) the vertical range.
      * @return
      *        Float array containing terrain data, alternating between x and y coordinates. Number of coordinates
      *        equals (2^numIterations + 1) + 3 coordinates to create a closed polygon.
