@@ -1,6 +1,6 @@
 # DCGRacer
 
-DCGRacer is a simple physics-based race game, using LibGDX and box2d.
+DCGRacer is a simple physics-based race game, using LibGDX/box2d for the physics, and artemis-odb for the Entity Component System. Its primary goal is to teach myself basic game development.
 
 # Status
 
