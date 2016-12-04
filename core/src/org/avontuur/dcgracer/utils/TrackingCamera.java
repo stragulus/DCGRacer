@@ -1,6 +1,7 @@
 package org.avontuur.dcgracer.utils;
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Body;
 
 /**
@@ -99,17 +100,22 @@ public class TrackingCamera extends OrthographicCamera {
         );
     }
 
-    private float centerXorY(float bodyPositionWorld, float camPosition, float viewport, Float minBoundary, Float maxBoundary,
-                             float deltaTime, boolean doCenter) {
+    /*
+     * Returns the delta by which the provided camPosition needs to be altered
+     */
+    private float centerXorY(float bodyPositionWorld, float camPosition, float viewport, Float minBoundary,
+                             Float maxBoundary, float deltaTime, boolean doCenter) {
         if (!doCenter) {
             return 0f;
         }
 
         float bodyPosition = bodyPositionWorld * unitsPerMeter;
-        float delta = (bodyPosition - camPosition) * lerp * deltaTime;
-        float newPosition = camPosition + delta;
+        //float delta = (bodyPosition - camPosition) * lerp * deltaTime;
+        float delta = (bodyPosition - camPosition);
+        float lerpFactor = MathUtils.clamp(this.lerp * deltaTime, 0f, 1f);
+        float newPosition = camPosition + delta * lerpFactor;
 
-        // never move the camera viewport beyond the left edge of the world.
+        // never move the camera viewport beyond the (horizontal) edges of the world.
         if (minBoundary != null && newPosition < minBoundary + (viewport / 2f)) {
             delta = 0;
         } else if (maxBoundary != null && newPosition > maxBoundary - (viewport / 2f)) {

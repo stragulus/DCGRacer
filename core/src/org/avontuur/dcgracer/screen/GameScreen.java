@@ -7,18 +7,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.PolygonRegion;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.input.GestureDetector;
-import com.badlogic.gdx.math.EarClippingTriangulator;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.ChainShape;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.utils.ShortArray;
 
 import org.avontuur.dcgracer.DCGRacer;
 import org.avontuur.dcgracer.component.Physics;
@@ -28,13 +23,13 @@ import org.avontuur.dcgracer.system.CameraEnum;
 import org.avontuur.dcgracer.system.CameraUpdateSystem;
 import org.avontuur.dcgracer.system.ComponentMapperSystem;
 import org.avontuur.dcgracer.system.GameOverSystem;
+import org.avontuur.dcgracer.system.LandscapeUpdateSystem;
 import org.avontuur.dcgracer.system.MotionSystem;
 import org.avontuur.dcgracer.system.PlayerInputSystem;
 import org.avontuur.dcgracer.system.PolygonRegionRenderingSystem;
 import org.avontuur.dcgracer.system.RenderCanvasSystem;
 import org.avontuur.dcgracer.system.SpritePositionSystem;
 import org.avontuur.dcgracer.system.SpriteRenderingSystem;
-import org.avontuur.dcgracer.utils.TerrainGenerator;
 import org.avontuur.dcgracer.utils.TrackingCamera;
 
 /**
@@ -44,31 +39,7 @@ import org.avontuur.dcgracer.utils.TrackingCamera;
  */
 public class GameScreen implements Screen {
 
-    /*
-     * TODO: Deprecate all state here
-    private SpriteBatch batch;
-    private PolygonSpriteBatch terrainBatch;
-
-    private ShapeRenderer shapeRenderer;
-
-    private Sprite sprite;
-    private PolygonSprite terrainSprite;
-    private PolygonRegion terrainPolygonRegion;
-
-    private Body playerBody;
-    private Body bodyTerrain;
-
-    private TrackingCamera cam;
-    private TrackingCamera terrainCam;
-
-    private Texture textureTerrainMud;
-
-    private float[] terrain;
-    private int terrain_ppm; //terrain texture pixels per meter factor
-     */
-
-    // game state variables
-    private short pushDirection = 0;
+    // with, in world units (meters) of the visible world
     final float VIEWPORT_WIDTH = 10f;
 
     // Maximum frame time still acceptable for reliable physics processing
@@ -88,6 +59,7 @@ public class GameScreen implements Screen {
                 .with(new MotionSystem())
                 .with(new SpritePositionSystem())
                 .with(new CameraUpdateSystem(VIEWPORT_WIDTH))
+                .with(new LandscapeUpdateSystem(VIEWPORT_WIDTH))
                 .with(new RenderCanvasSystem())
                 .with(new SpriteRenderingSystem())
                 .with(new PolygonRegionRenderingSystem())
@@ -103,7 +75,6 @@ public class GameScreen implements Screen {
             DCGRacer.log.info("Creating The World");
             artemisWorld = createWorld();
             createPlayerEntity();
-            createLandscapeEntity();
             setupInput();
         }
 
@@ -171,83 +142,6 @@ public class GameScreen implements Screen {
         spriteComponent.sprite = sprite;
     }
 
-    private void createLandscapeEntity() {
-        Box2dWorldSystem box2dSystem = artemisWorld.getSystem(Box2dWorldSystem.class);
-        CameraUpdateSystem cameraUpdateSystem = artemisWorld.getSystem(CameraUpdateSystem.class);
-        ComponentMapperSystem mappers = artemisWorld.getSystem(ComponentMapperSystem.class);
-
-        int numIterations = 10;
-        float range = 18f;
-        float scaleX = 0.02f;
-        float scaleY = 0.25f;
-
-        // Generate the terrain data points - this will create the vertices for a closed simply polygon
-        // representing the ground terrain.
-        float[] terrain;
-        terrain = TerrainGenerator.generateTerrainData(numIterations, range, scaleX, scaleY);
-
-        // Create the box2d representation of the terrain
-        ChainShape terrainShape = new ChainShape();
-        terrainShape.createChain(terrain);
-
-        BodyDef bodyDef = new BodyDef();
-        bodyDef.type = BodyDef.BodyType.StaticBody;
-        bodyDef.position.set(0, 0);
-
-        Body bodyTerrain = box2dSystem.getBox2DWorld().createBody(bodyDef);
-
-        FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.shape = terrainShape;
-        fixtureDef.density = 1f;
-
-        bodyTerrain.createFixture(fixtureDef);
-
-        terrainShape.dispose();
-
-
-        // Create the sprite for the terrain. The terrain is filled in using triangulation, which thankfully
-        // LibGDX supplies out of the box.
-        Texture textureTerrainMud = ResourceManager.instance.textureTerrainMud;
-        textureTerrainMud.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-        textureTerrainMud.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-        TextureRegion terrainRegion = new TextureRegion(textureTerrainMud);
-        //terrainRegion.setRegion(0, 0, textureTerrainMud.getWidth() * 15, textureTerrainMud.getHeight() * 15);
-        //terrainRegion.setU2(2);
-        //terrainRegion.setV2(2);
-
-        // This appears to need a different pixels-to-meters ratio. When repeating textures, it will use the
-        // texture pixels as unit. So we need to convert those to meters. I want the ground texture to be about 1m
-        // wide, so ratio is 1m = <texture width> / 2
-        int terrain_ppm = textureTerrainMud.getWidth() / 2;
-        // 4th from last coordinate in terrain is the right-most one (yes, this is dirty, this needs a
-        // refactor of course)
-        final float[] terrainVertices = transformVertices(terrain, terrain_ppm, terrain_ppm);
-        EarClippingTriangulator triangulator = new EarClippingTriangulator();
-        ShortArray triangulatedShortArray = triangulator.computeTriangles(terrainVertices);
-        short[] triangles = new short[triangulatedShortArray.size];
-        for (int i = 0; i < triangulatedShortArray.size; i++)
-            triangles[i] = triangulatedShortArray.get(i);
-        PolygonRegion terrainPolygonRegion = new PolygonRegion(terrainRegion, terrainVertices, triangles);
-
-        // Create entity
-        int e = artemisWorld.create();
-        Physics physics = mappers.physicsComponents.create(e);
-        physics.body = bodyTerrain;
-        org.avontuur.dcgracer.component.PolygonRegion polygonRegionComponent =
-                mappers.polygonRegionComponents.create(e);
-        polygonRegionComponent.polygonRegion = terrainPolygonRegion;
-
-        // Set camera right boundary to the width of the terrain
-        // TODO: Move this to CameraUpdateSystem (or call a method there) (after the splitup into 2 systems for
-        //       sprites & polygons)
-        final float terrainWidth = terrain[terrain.length - 4 * 2];
-        DCGRacer.log.debug("Terrain width = " + terrainWidth);
-        TrackingCamera terrainCam = cameraUpdateSystem.getCamera(CameraEnum.TERRAIN);
-        terrainCam.setBoundaryRight(terrainWidth);
-        TrackingCamera cam = cameraUpdateSystem.getCamera(CameraEnum.STANDARD);
-        cam.setBoundaryRight(terrainWidth);
-    }
-
     @Override
     public void resize(int width, int height) {
         //TODO call resize on the cameraUpdateSystems
@@ -279,20 +173,4 @@ public class GameScreen implements Screen {
     @Override
     public void dispose() {
     }
-
-    private float[] transformVertices(float[] vertices, float scaleX, float scaleY) {
-        // This assumes each vertex' coordinate occupies 2 sequential indexes in vertices
-        float[] result = new float[vertices.length];
-
-        for (int i = 0; i < vertices.length; i++) {
-            if (i % 2 == 0) {
-                result[i] = vertices[i] * scaleX;
-            } else {
-                result[i] = vertices[i] * scaleY;
-            }
-        }
-
-        return result;
-    }
-
 }

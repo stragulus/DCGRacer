@@ -40,8 +40,8 @@ public class CameraUpdateSystem extends IteratingSystem {
         cam = setupCamera(1);
 
         // Drawing the terrain appears to need a different pixels-to-meters ratio. With repeating textures, it will
-        // use the texture pixels as unit. So we need to convert those to meters. I want the ground texture to be about 1m
-        // wide, so ratio is 1m = <texture width> / 2
+        // use the texture pixels as unit. So we need to convert those to meters. I want the ground texture to be
+        // about 1m wide, so ratio is 1m = <texture width> / 2
         float terrainPPM = ResourceManager.instance.textureTerrainMud.getWidth() / 2;
         terrainCam = setupCamera(terrainPPM);
     }
@@ -77,9 +77,8 @@ public class CameraUpdateSystem extends IteratingSystem {
         // units. This requires that all sprites have their world size set explicitly, so
         // that we never have to worry about pixels anymore.
 
-        // lerp: Adds a delay to smooth the camera movements. Very close to 1: rougher movements.
-        //       Very far from 1: Increased likelihood that it won't catch up with quick movements
-        float lerp = 0.95f;
+        // lerp: Adds a delay to smooth the camera movements. Bigger value implies faster movements.
+        float lerp = 2f;
         TrackingCamera cam = new TrackingCamera(this.viewportWidth, this.viewportWidth * (h / w),
                 unitsPerMeter, lerp, true, false);
         cam.setBoundaryLeft(0); //don't pan past the left side of the world
