@@ -23,6 +23,7 @@ import org.avontuur.dcgracer.system.CameraEnum;
 import org.avontuur.dcgracer.system.CameraUpdateSystem;
 import org.avontuur.dcgracer.system.ComponentMapperSystem;
 import org.avontuur.dcgracer.system.GameOverSystem;
+import org.avontuur.dcgracer.system.HUDDisplaySystem;
 import org.avontuur.dcgracer.system.LandscapeUpdateSystem;
 import org.avontuur.dcgracer.system.MotionSystem;
 import org.avontuur.dcgracer.system.PlayerInputSystem;
@@ -63,6 +64,7 @@ public class GameScreen implements Screen {
                 .with(new RenderCanvasSystem())
                 .with(new SpriteRenderingSystem())
                 .with(new PolygonRegionRenderingSystem())
+                .with(new HUDDisplaySystem())
                 .with(new GameOverSystem())
                 .build();
 
@@ -153,6 +155,10 @@ public class GameScreen implements Screen {
         terrainCam.resize(VIEWPORT_WIDTH, VIEWPORT_WIDTH * height / width);
         terrainCam.update();
         DCGRacer.log.debug("Resized to " + cam.viewportWidth + "," + cam.viewportHeight);
+
+        // Also update the HUD
+        HUDDisplaySystem hudDisplaySystem = artemisWorld.getSystem(HUDDisplaySystem.class);
+        hudDisplaySystem.resize(width, height);
     }
 
     @Override
@@ -172,5 +178,7 @@ public class GameScreen implements Screen {
 
     @Override
     public void dispose() {
+        HUDDisplaySystem hudDisplaySystem = artemisWorld.getSystem(HUDDisplaySystem.class);
+        hudDisplaySystem.dispose();
     }
 }

@@ -4,6 +4,7 @@ import com.artemis.Aspect;
 import com.artemis.ComponentMapper;
 import com.artemis.systems.IteratingSystem;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.physics.box2d.Body;
 
 import org.avontuur.dcgracer.DCGRacer;
@@ -24,7 +25,7 @@ public class CameraUpdateSystem extends IteratingSystem {
     public TrackingCamera cam;
     public TrackingCamera terrainCam;
 
-    // width of viewport, in world units
+    // width of viewport on the world, in world units
     private float viewportWidth;
 
     public CameraUpdateSystem(float viewportWidth) {
@@ -66,6 +67,13 @@ public class CameraUpdateSystem extends IteratingSystem {
             return cam;
         }
         return terrainCam;
+    }
+
+    public void resize(int width, int height) {
+        cam.resize(viewportWidth, viewportWidth * height / width);
+        cam.update();
+        terrainCam.resize(viewportWidth, viewportWidth * height / width);
+        terrainCam.update();
     }
 
     private TrackingCamera setupCamera(final float unitsPerMeter) {
