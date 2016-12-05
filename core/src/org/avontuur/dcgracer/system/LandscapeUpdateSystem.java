@@ -17,7 +17,6 @@ import org.avontuur.dcgracer.manager.ResourceManager;
 import org.avontuur.dcgracer.utils.TerrainGenerator;
 import org.avontuur.dcgracer.utils.TrackingCamera;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 
 /**
@@ -48,23 +47,21 @@ public class LandscapeUpdateSystem extends BaseSystem {
     private int nextTerrainDataPointsIndex = 0;
     // number of data points to use for individual sliced terrain segments
     private int terrainDataPointsPerSegment;
+    private boolean rightBoundarySet = false;
 
     public LandscapeUpdateSystem(final float viewportWidth) {
         this.viewPortWidth = viewportWidth;
 
         // Generate the terrain data points - this will create the vertices for a closed simple polygon
         // representing the ground terrain.
-
-        // When this actually works, levels will be pre-generated instead of procedurally generated at game start.
-        // For now, use some hardcoded values.
-        int numIterations = 11;
-        float range = 18f;
-        float scaleX = 0.04f; //distance between 2 points
-        float scaleY = 0.25f;
-
-        this.terrainDataPoints = TerrainGenerator.generateTerrainData(numIterations, range, scaleX, scaleY);
+        this.terrainDataPoints = getTerrainData();
         // Each segment should take up about 1/4th of the screen
-        this.terrainDataPointsPerSegment = (int)(this.viewPortWidth / 4f / scaleX);
+        // this.terrainDataPointsPerSegment = (int)(this.viewPortWidth / 16f / scaleX);
+        // Just put a cap on the maximum datapoints per segment; higher means bigger physics objects and less total
+        // segments
+        this.terrainDataPointsPerSegment = 1000;
+        // TODO: Looks like the segment overlaps are creating undesired physics effects, such as the ball suddenly
+        //       bouncing. May want to switch the physics surface to use contiguous EdgeShapes which are swapped out?
         this.entitiesOnScreen = new LinkedList<Integer>();
 
         Texture textureTerrainMud = ResourceManager.instance.textureTerrainMud;
@@ -93,16 +90,56 @@ public class LandscapeUpdateSystem extends BaseSystem {
         }
         removeTerrainLeft();
 
-        if (endOfTerrain()) {
+        if (endOfTerrain() && !this.rightBoundarySet) {
             // Prevent the cameras from going beyond the end of the world.
             DCGRacer.log.debug("endOfTerrain detected - setting camera bound");
+            this.rightBoundarySet = true;
             float terrainWidth = this.terrainDataPoints[this.terrainDataPoints.length - INDICES_PER_DATAPOINT];
             TrackingCamera terrainCam = cameraUpdateSystem.getCamera(CameraEnum.TERRAIN);
             terrainCam.setBoundaryRight(terrainWidth);
             TrackingCamera cam = cameraUpdateSystem.getCamera(CameraEnum.STANDARD);
             cam.setBoundaryRight(terrainWidth);
-
         }
+    }
+
+    private float[] getTerrainData() {
+        // When this actually works, levels will be pre-generated instead of procedurally generated at game start.
+        // For now, use some hardcoded values.
+        float[] result;
+
+        // very bumpy terrain
+        // return generateTerrainDataProcedurally(11, 18f, 0.02f, 0.25f, 8);
+
+        // way smoother but very straight edges.
+        result = generateTerrainDataProcedurally(11, 18f, 0.2f, 0.25f, 8);
+
+        return result;
+    }
+
+    private float[] generateTerrainDataProcedurally(int numIterations, float range, float scaleX, float scaleY,
+                                                    int numTerrainSets) {
+        float xOffset = 0; //X Coordinate to start with for a new terrain set
+        short terrainDataPointsOffset = 0; // index in terrainDataPointsOffset to start appending to
+
+        // Instead of generating 1 terrain data set with a higher number of iterations, generate multiple sets
+        // with a lower iteration count. The reason for this is that more iterations will smooth out the terrain
+        // more. The areas overlap because they all start at the same Y-coordinate.
+        // TODO: fugly, don't want these weird bumps in between sets, but for now it will do
+        float[] allDataPoints = null;
+
+        for (int i =0; i < numTerrainSets; i++) {
+            float[] dataPoints = TerrainGenerator.generateTerrainData(numIterations, range, scaleX, scaleY, xOffset);
+
+            if (allDataPoints == null) {
+                allDataPoints = new float[dataPoints.length * numTerrainSets];
+            }
+            System.arraycopy(dataPoints, 0, allDataPoints, terrainDataPointsOffset, dataPoints.length);
+            terrainDataPointsOffset += dataPoints.length;
+
+            xOffset = dataPoints[dataPoints.length - 2] + scaleX;
+        }
+
+        return allDataPoints;
     }
 
     private float getCameraRightBoundary() {
@@ -141,7 +178,7 @@ public class LandscapeUpdateSystem extends BaseSystem {
         // slice the terrainDataPoints array to the section required for the new segment; reserve extra space for
         // 3 coordinates to close the polygon.
         float[] segmentTerrainDataPoints = new float[terrainIndexTo - terrainIndexFrom + 3 * INDICES_PER_DATAPOINT];
-        System.arraycopy(terrainDataPoints, terrainIndexFrom, segmentTerrainDataPoints, 0,
+        System.arraycopy(this.terrainDataPoints, terrainIndexFrom, segmentTerrainDataPoints, 0,
                 terrainIndexTo - terrainIndexFrom);
         closePolygon(segmentTerrainDataPoints);
 

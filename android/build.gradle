@@ -16,7 +16,7 @@ android {
     }
     defaultConfig {
         applicationId "org.avontuur.dcgracer"
-        minSdkVersion 8
+        minSdkVersion 9
         targetSdkVersion 23
     }
 }

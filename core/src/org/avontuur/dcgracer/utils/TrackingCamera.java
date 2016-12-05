@@ -112,8 +112,9 @@ public class TrackingCamera extends OrthographicCamera {
         float bodyPosition = bodyPositionWorld * unitsPerMeter;
         //float delta = (bodyPosition - camPosition) * lerp * deltaTime;
         float delta = (bodyPosition - camPosition);
-        float lerpFactor = MathUtils.clamp(this.lerp * deltaTime, 0f, 1f);
-        float newPosition = camPosition + delta * lerpFactor;
+        // TODO: Disabled lerp for now; it will allow the player to move out of the viewport, which I don't want.
+        //float lerpFactor = MathUtils.clamp(this.lerp * deltaTime, 0f, 1f);
+        float newPosition = camPosition + delta;
 
         // never move the camera viewport beyond the (horizontal) edges of the world.
         if (minBoundary != null && newPosition < minBoundary + (viewport / 2f)) {
