@@ -117,8 +117,6 @@ public class LandscapeUpdateSystem extends BaseSystem {
         // transition is often not very smooth
         //result = generateTerrainDataProcedurally(5, 18f, 2f, 0.25f, 0.5f, 800);
         // Just 1 segment, with roughness set to a higher value for that extra bumpiness.
-        // TODO: Y-coordinates are not clamped between 0..18f. probably because start/endpoint is no longer at
-        //       range/2 with roughness > 0.5. If < 0, display screws up.
         result = generateTerrainDataProcedurally(11, 18f, 2f, 0.25f, 0.91f, 1);
 
         return result;
