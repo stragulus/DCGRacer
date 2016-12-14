@@ -59,7 +59,7 @@ public class LandscapeUpdateSystem extends BaseSystem {
         // this.terrainDataPointsPerSegment = (int)(this.viewPortWidth / 16f / scaleX);
         // Just put a cap on the maximum datapoints per segment; higher means bigger physics objects and less total
         // segments
-        this.terrainDataPointsPerSegment = 1000;
+        this.terrainDataPointsPerSegment = 100;
         // TODO: Looks like the segment overlaps are creating undesired physics effects, such as the ball suddenly
         //       bouncing. May want to switch the physics surface to use contiguous EdgeShapes which are swapped out?
         this.entitiesOnScreen = new LinkedList<Integer>();
@@ -107,20 +107,31 @@ public class LandscapeUpdateSystem extends BaseSystem {
         // For now, use some hardcoded values.
         float[] result;
 
-        // very bumpy terrain
-        // return generateTerrainDataProcedurally(11, 18f, 0.02f, 0.25f, 8);
-
+        // very bumpy terrain - does not perform well!
+        //result = generateTerrainDataProcedurally(11, 18f, 0.02f, 0.25f, 0.5f, 80);
         // way smoother but very straight edges.
-        result = generateTerrainDataProcedurally(11, 18f, 0.2f, 0.25f, 8);
+        //result = generateTerrainDataProcedurally(11, 18f, 0.2f, 0.25f, 0.5f, 8);
+        // bumpy without too many datapoints
+        // result = generateTerrainDataProcedurally(8, 18f, 0.2f, 0.25f, 0.5f, 80);
+        // bumpy with long straight edges. This stitching together is still stupid; between segments, the
+        // transition is often not very smooth
+        //result = generateTerrainDataProcedurally(5, 18f, 2f, 0.25f, 0.5f, 800);
+        // Just 1 segment, with roughness set to a higher value for that extra bumpiness.
+        // TODO: Y-coordinates are not clamped between 0..18f. probably because start/endpoint is no longer at
+        //       range/2 with roughness > 0.5. If < 0, display screws up.
+        result = generateTerrainDataProcedurally(11, 18f, 2f, 0.25f, 0.91f, 1);
 
         return result;
     }
 
-    private float[] generateTerrainDataProcedurally(int numIterations, float range, float scaleX, float scaleY,
-                                                    int numTerrainSets) {
+    private float[] generateTerrainDataProcedurally(final int numIterations, final float range, final float scaleX,
+                                                    final float scaleY, final float roughness,
+                                                    final int numTerrainSets) {
         float xOffset = 0; //X Coordinate to start with for a new terrain set
-        short terrainDataPointsOffset = 0; // index in terrainDataPointsOffset to start appending to
+        float yOffset = range / 2 * scaleY; //Y coordinate to start with for a new terrain set
+        int terrainDataPointsOffset = 0; // index in terrainDataPointsOffset to start appending to
 
+        DCGRacer.log.debug("Generating terrain with scaleX=" + scaleX);
         // Instead of generating 1 terrain data set with a higher number of iterations, generate multiple sets
         // with a lower iteration count. The reason for this is that more iterations will smooth out the terrain
         // more. The areas overlap because they all start at the same Y-coordinate.
@@ -128,7 +139,8 @@ public class LandscapeUpdateSystem extends BaseSystem {
         float[] allDataPoints = null;
 
         for (int i =0; i < numTerrainSets; i++) {
-            float[] dataPoints = TerrainGenerator.generateTerrainData(numIterations, range, scaleX, scaleY, xOffset);
+            float[] dataPoints = TerrainGenerator.generateTerrainData(numIterations, range, scaleX, scaleY, xOffset,
+                    yOffset, roughness);
 
             if (allDataPoints == null) {
                 allDataPoints = new float[dataPoints.length * numTerrainSets];
@@ -137,6 +149,7 @@ public class LandscapeUpdateSystem extends BaseSystem {
             terrainDataPointsOffset += dataPoints.length;
 
             xOffset = dataPoints[dataPoints.length - 2] + scaleX;
+            yOffset = dataPoints[dataPoints.length - 1]; // little stupid, this makes little horizontal paths.
         }
 
         return allDataPoints;
@@ -159,7 +172,7 @@ public class LandscapeUpdateSystem extends BaseSystem {
 
     private void addTerrainRight() {
         int terrainIndexFrom = this.nextTerrainDataPointsIndex;
-        DCGRacer.log.debug("addTerrainRight([" + terrainIndexFrom + "]->("
+        DCGRacer.log.debug("addTerrainRight!!([" + terrainIndexFrom + "]->("
                 + this.terrainDataPoints[terrainIndexFrom] + ", "
                 + this.terrainDataPoints[terrainIndexFrom + 1] + "))");
 

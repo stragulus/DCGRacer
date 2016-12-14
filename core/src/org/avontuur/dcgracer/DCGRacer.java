@@ -53,16 +53,21 @@ public class DCGRacer extends Game {
                 Gdx.app.postRunnable(new Runnable() {
                     @Override
                     public void run() {
+                        DCGRacer.log.debug("Post-resource load splash-screen");
                         long splash_elapsed_time = System.currentTimeMillis() - splash_start_time;
                         if (splash_elapsed_time < DCGRacer.SPLASH_MINIMUM_MILLIS) {
+                            float sleepTime = (DCGRacer.SPLASH_MINIMUM_MILLIS - splash_elapsed_time) / 1000f;
+                            DCGRacer.log.debug("Sleep time left: " + sleepTime);
                             Timer.schedule(
                                     new Timer.Task() {
                                         @Override
                                         public void run() {
+                                            DCGRacer.log.debug("Done sleeping; it's game time!");
                                             ScreenManager.getInstance().showScreen(ScreenEnum.GAME);
                                         }
-                                    }, (float) (DCGRacer.SPLASH_MINIMUM_MILLIS - splash_elapsed_time) / 1000f);
+                                    }, sleepTime);
                         } else {
+                            DCGRacer.log.debug("No time to sleep, let's play!");
                             ScreenManager.getInstance().showScreen(ScreenEnum.GAME);
                         }
                     }
