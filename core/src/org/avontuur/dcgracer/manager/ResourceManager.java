@@ -17,6 +17,10 @@ public class ResourceManager {
     // textures
     public Texture textureTerrainMud;
     public Texture gameLogo;
+    public Texture carBody;
+    public Texture jerryCan;
+    public Texture wheel;
+    public Texture coin;
 
     // singleton: prevent instantiation from other classes
     private ResourceManager() {
@@ -25,6 +29,10 @@ public class ResourceManager {
     private void loadTextures() {
         textureTerrainMud = new Texture(Gdx.files.internal("background_mud.png"));
         gameLogo = new Texture(Gdx.files.internal("ball.png"));
+        carBody = new Texture(Gdx.files.internal("car body.png"));
+        jerryCan = new Texture(Gdx.files.internal("jerrycan.png"));
+        wheel = new Texture(Gdx.files.internal("wheel.png"));
+        coin = new Texture(Gdx.files.internal("coin.png"));
     }
 
     private void loadSoundEffects() {
