@@ -10,10 +10,13 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.joints.WheelJoint;
+import com.badlogic.gdx.physics.box2d.joints.WheelJointDef;
 
 import org.avontuur.dcgracer.DCGRacer;
 import org.avontuur.dcgracer.component.Physics;
@@ -143,14 +146,6 @@ public class GameScreen implements Screen {
         Body carBody = box2dSystem.getBox2DWorld().createBody(bodyDef);
         // adds a PolygonShape to the body
         loader.attachFixture(carBody, "Car Body", fixtureDef, carWidth);
-        /*
-        // TODO: replace shape with the loaded shape after debugging
-        CircleShape shape = new CircleShape();
-        final float circleRadius = carWidth / 2;
-        shape.setRadius(circleRadius);
-        fixtureDef.shape = shape;
-        carBody.createFixture(fixtureDef);
-        */
 
         int e = artemisWorld.create();
         Physics physics = mappers.physicsComponents.create(e);
@@ -159,6 +154,40 @@ public class GameScreen implements Screen {
         spriteComponent.sprite = carBodySprite;
         // TODO: where is the sprite being linked to the physics body, e.g. what updates the sprite position..???
         //       A: the SPritePositionSystem!
+
+        // A wheel, physics part
+        CircleShape wheelShape = new CircleShape();
+        float wheelRadius = 0.4f;
+        wheelShape.setRadius(wheelRadius);
+        FixtureDef wheelFixtureDef = new FixtureDef();
+        wheelFixtureDef.density = 0.6f;
+        wheelFixtureDef.restitution = 0.1f;
+        wheelFixtureDef.friction = 2f;
+        wheelFixtureDef.shape = wheelShape;
+        Body wheelBody = box2dSystem.getBox2DWorld().createBody(bodyDef);
+        wheelBody.createFixture(wheelFixtureDef);
+        WheelJointDef wheelJointDef = new WheelJointDef();
+        wheelJointDef.bodyA = carBody;
+        wheelJointDef.bodyB = wheelBody;
+        /// localAnchorA is relative to bodyA's origin
+        wheelJointDef.localAnchorA.set(2.65f, -1f);
+        wheelJointDef.localAnchorB.set(0f, 0f); // circle origin is center...right?
+        wheelJointDef.localAxisA.set(Vector2.Y); // wut diz?
+        wheelJointDef.frequencyHz = fixtureDef.density; // wut diz ??
+        wheelJointDef.maxMotorTorque = fixtureDef.density * 10; // copypasta from some example
+        WheelJoint wheelJoint = (WheelJoint)box2dSystem.getBox2DWorld().createJoint(wheelJointDef);
+
+        // A wheel, sprite part
+        Texture wheelTexture = ResourceManager.instance.wheel;
+        Sprite wheelSprite = new Sprite(wheelTexture);
+        wheelSprite.setSize(wheelRadius * 2f, wheelRadius * 2f);
+        wheelSprite.setOrigin(wheelSprite.getWidth() / 2, wheelSprite.getHeight() / 2);
+        // not setting position; SpritePositioningSystem will take care of that for us!
+        e = artemisWorld.create();
+        physics = mappers.physicsComponents.create(e);
+        physics.body = wheelBody;
+        spriteComponent = mappers.spriteComponents.create(e);
+        spriteComponent.sprite = wheelSprite;
     }
 
     private void createPlayerEntity() {
