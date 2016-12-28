@@ -31,6 +31,7 @@ import org.avontuur.dcgracer.system.PolygonRegionRenderingSystem;
 import org.avontuur.dcgracer.system.RenderCanvasSystem;
 import org.avontuur.dcgracer.system.SpritePositionSystem;
 import org.avontuur.dcgracer.system.SpriteRenderingSystem;
+import org.avontuur.dcgracer.utils.BodyEditorLoader;
 import org.avontuur.dcgracer.utils.TrackingCamera;
 
 /**
@@ -77,6 +78,7 @@ public class GameScreen implements Screen {
             DCGRacer.log.info("Creating The World");
             artemisWorld = createWorld();
             createPlayerEntity();
+            createCarBodyEntity();
             setupInput();
         }
 
@@ -99,6 +101,62 @@ public class GameScreen implements Screen {
         im.addProcessor(new GestureDetector(inputSystem));
         im.addProcessor(inputSystem);
         Gdx.input.setInputProcessor(im);
+    }
+
+    private void createCarBodyEntity() {
+        // PoC for creating a car body from a sprite and a polygon.
+        Box2dWorldSystem box2dSystem = artemisWorld.getSystem(Box2dWorldSystem.class);
+        ComponentMapperSystem mappers = artemisWorld.getSystem(ComponentMapperSystem.class);
+        CameraUpdateSystem cameraUpdateSystem = artemisWorld.getSystem(CameraUpdateSystem.class);
+
+        // Polygon data created using PhysicsBodyEditor; what an awesome free tool!
+        BodyEditorLoader loader = new BodyEditorLoader(Gdx.files.internal("data/car_body_polygon.json"));
+
+        BodyDef bodyDef = new BodyDef();
+        bodyDef.type = BodyDef.BodyType.DynamicBody;
+
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.density = 1;
+        fixtureDef.friction = 0.5f;
+        fixtureDef.restitution = 0f;
+
+        Texture carBodyTexture = ResourceManager.instance.carBody;
+        float carWidth = 3.5f;
+        float carHeight = carBodyTexture.getHeight() / (carBodyTexture.getWidth() / carWidth);
+
+        Sprite carBodySprite = new Sprite(carBodyTexture);
+        carBodySprite.setSize(carWidth, carHeight);
+        // sprite Origin must match body origin; body origin is defined to be (0,0) in the json data file, generated
+        // by the Physics Body Editor.
+        carBodySprite.setOrigin(0, 0);
+        TrackingCamera cam = cameraUpdateSystem.getCamera(CameraEnum.STANDARD);
+        // TODO: Sprite position set here does not reflect actual sprite position in the game; probably because resize()
+        //       has never been called..?
+        carBodySprite.setPosition(cam.viewportWidth * 0.2f - carBodySprite.getWidth() / 2, cam.viewportHeight * 1.1f);
+        DCGRacer.log.debug("Car body " + carBodySprite + " position = " + carBodySprite.getX() + ", " + carBodySprite.getY());
+        DCGRacer.log.debug("Car body size = " + carBodySprite.getWidth() + ", " + carBodySprite.getHeight());
+        bodyDef.position.set(carBodySprite.getX() + carBodySprite.getWidth() / 2f,
+                carBodySprite.getY() + carBodySprite.getHeight() / 2f);
+
+        Body carBody = box2dSystem.getBox2DWorld().createBody(bodyDef);
+        // adds a PolygonShape to the body
+        loader.attachFixture(carBody, "Car Body", fixtureDef, carWidth);
+        /*
+        // TODO: replace shape with the loaded shape after debugging
+        CircleShape shape = new CircleShape();
+        final float circleRadius = carWidth / 2;
+        shape.setRadius(circleRadius);
+        fixtureDef.shape = shape;
+        carBody.createFixture(fixtureDef);
+        */
+
+        int e = artemisWorld.create();
+        Physics physics = mappers.physicsComponents.create(e);
+        physics.body = carBody;
+        org.avontuur.dcgracer.component.Sprite spriteComponent = mappers.spriteComponents.create(e);
+        spriteComponent.sprite = carBodySprite;
+        // TODO: where is the sprite being linked to the physics body, e.g. what updates the sprite position..???
+        //       A: the SPritePositionSystem!
     }
 
     private void createPlayerEntity() {

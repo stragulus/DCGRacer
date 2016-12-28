@@ -226,6 +226,7 @@ public class LandscapeUpdateSystem extends BaseSystem {
     }
 
     private PolygonRegion createTerrainPolygonRegion(float[] segmentTerrainDataPoints) {
+        // terrainVertices is in pixel units.
         final float[] terrainVertices = transformVertices(segmentTerrainDataPoints, terrainPPM, terrainPPM);
         EarClippingTriangulator triangulator = new EarClippingTriangulator();
         ShortArray triangulatedShortArray = triangulator.computeTriangles(terrainVertices);
@@ -260,7 +261,7 @@ public class LandscapeUpdateSystem extends BaseSystem {
     }
 
 
-    // map world unit vertices to pixel-based vertices
+    // map world unit vertices to pixel-based vertices for triangulation
     private float[] transformVertices(float[] vertices, float scaleX, float scaleY) {
         // This assumes each vertex' coordinate occupies 2 sequential indexes in vertices
         float[] result = new float[vertices.length];

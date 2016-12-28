@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Body;
 
+import org.avontuur.dcgracer.DCGRacer;
 import org.avontuur.dcgracer.component.Physics;
 
 /**
@@ -32,8 +33,13 @@ public class SpritePositionSystem extends IteratingSystem {
          */
         if (sprite == null) return;
 
+        //DCGRacer.log.debug("Setting sprite " + sprite + " position to body " + body + " position " + body.getPosition());
+
+        // TODO: The ball body/sprite position are offset, but the car body/sprite are not. Fix this!
         // Now update the sprite position accordingly to its now updated Physics playerBody
-        sprite.setPosition(body.getPosition().x - sprite.getWidth() / 2, body.getPosition().y - sprite.getHeight() / 2);
+        // THIS works for the ball, not the car body
+        //sprite.setPosition(body.getPosition().x - sprite.getWidth() / 2, body.getPosition().y - sprite.getHeight() / 2);
+        sprite.setPosition(body.getPosition().x, body.getPosition().y);
         // TODO: Should probably use a unique component for rotatables.
         sprite.setRotation(body.getAngle() * MathUtils.radiansToDegrees);
 
