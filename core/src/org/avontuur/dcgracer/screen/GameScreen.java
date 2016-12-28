@@ -22,6 +22,7 @@ import org.avontuur.dcgracer.system.Box2dWorldSystem;
 import org.avontuur.dcgracer.system.CameraEnum;
 import org.avontuur.dcgracer.system.CameraUpdateSystem;
 import org.avontuur.dcgracer.system.ComponentMapperSystem;
+import org.avontuur.dcgracer.system.DebugRenderingSystem;
 import org.avontuur.dcgracer.system.GameOverSystem;
 import org.avontuur.dcgracer.system.HUDDisplaySystem;
 import org.avontuur.dcgracer.system.LandscapeUpdateSystem;
@@ -64,6 +65,7 @@ public class GameScreen implements Screen {
                 .with(new LandscapeUpdateSystem(VIEWPORT_WIDTH))
                 .with(new RenderCanvasSystem())
                 .with(new SpriteRenderingSystem())
+                .with(new DebugRenderingSystem())
                 .with(new PolygonRegionRenderingSystem())
                 .with(new HUDDisplaySystem())
                 .with(new GameOverSystem())
