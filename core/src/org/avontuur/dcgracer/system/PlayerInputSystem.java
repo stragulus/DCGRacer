@@ -21,8 +21,11 @@ import org.avontuur.dcgracer.component.PlayerInput;
 public class PlayerInputSystem extends IteratingSystem implements GestureDetector.GestureListener, InputProcessor {
     // TODO: Move this into a superclass for all my systems
     private ComponentMapperSystem mappers;
+    private Box2dWorldSystem box2dWorldSystem;
 
     private int pushDirection = 0;
+    private boolean pause = false;
+    private boolean pauseToggled = false;
 
     // Amount of force applied to player for each fling
     public static final float PUSH_FORCE = 15f;
@@ -47,6 +50,17 @@ public class PlayerInputSystem extends IteratingSystem implements GestureDetecto
         }
 
         pushDirection = 0;
+    }
+
+    @Override
+    protected void end() {
+        super.end();
+
+        // TODO: Split off input processing and motion/pause handling into their own systems
+        if (pauseToggled) {
+            pauseToggled = false;
+            box2dWorldSystem.setPause(pause);
+        }
     }
 
     @Override
@@ -109,6 +123,10 @@ public class PlayerInputSystem extends IteratingSystem implements GestureDetecto
             return true;
         } else if (keycode == Input.Keys.LEFT) {
             pushDirection = -1;
+            return true;
+        } else if (keycode == Input.Keys.SPACE) {
+            pause = !pause;
+            pauseToggled = true;
             return true;
         } else {
             return false;

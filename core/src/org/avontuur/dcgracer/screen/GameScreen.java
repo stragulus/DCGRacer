@@ -68,7 +68,7 @@ public class GameScreen implements Screen {
                 .with(new LandscapeUpdateSystem(VIEWPORT_WIDTH))
                 .with(new RenderCanvasSystem())
                 .with(new SpriteRenderingSystem())
-                .with(new DebugRenderingSystem())
+                //.with(new DebugRenderingSystem())
                 .with(new PolygonRegionRenderingSystem())
                 .with(new HUDDisplaySystem())
                 .with(new GameOverSystem())
@@ -82,6 +82,7 @@ public class GameScreen implements Screen {
         if (artemisWorld == null){
             DCGRacer.log.info("Creating The World");
             artemisWorld = createWorld();
+            DCGRacer.log.debug("Creating player & car");
             createPlayerEntity();
             createCarBodyEntity();
             setupInput();
@@ -117,8 +118,8 @@ public class GameScreen implements Screen {
         // Polygon data created using PhysicsBodyEditor; what an awesome free tool!
         BodyEditorLoader loader = new BodyEditorLoader(Gdx.files.internal("data/car_body_polygon.json"));
 
-        BodyDef bodyDef = new BodyDef();
-        bodyDef.type = BodyDef.BodyType.DynamicBody;
+        BodyDef dynamicBodyDef = new BodyDef();
+        dynamicBodyDef.type = BodyDef.BodyType.DynamicBody;
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.density = 1;
@@ -140,10 +141,10 @@ public class GameScreen implements Screen {
         carBodySprite.setPosition(cam.viewportWidth * 0.2f - carBodySprite.getWidth() / 2, cam.viewportHeight * 1.1f);
         DCGRacer.log.debug("Car body " + carBodySprite + " position = " + carBodySprite.getX() + ", " + carBodySprite.getY());
         DCGRacer.log.debug("Car body size = " + carBodySprite.getWidth() + ", " + carBodySprite.getHeight());
-        bodyDef.position.set(carBodySprite.getX() + carBodySprite.getWidth() / 2f,
+        dynamicBodyDef.position.set(carBodySprite.getX() + carBodySprite.getWidth() / 2f,
                 carBodySprite.getY() + carBodySprite.getHeight() / 2f);
 
-        Body carBody = box2dSystem.getBox2DWorld().createBody(bodyDef);
+        Body carBody = box2dSystem.getBox2DWorld().createBody(dynamicBodyDef);
         // adds a PolygonShape to the body
         loader.attachFixture(carBody, "Car Body", fixtureDef, carWidth);
 
@@ -152,42 +153,68 @@ public class GameScreen implements Screen {
         physics.body = carBody;
         org.avontuur.dcgracer.component.Sprite spriteComponent = mappers.spriteComponents.create(e);
         spriteComponent.sprite = carBodySprite;
-        // TODO: where is the sprite being linked to the physics body, e.g. what updates the sprite position..???
-        //       A: the SPritePositionSystem!
 
-        // A wheel, physics part
+        // Right Wheel
+        // ***********
+
         CircleShape wheelShape = new CircleShape();
         float wheelRadius = 0.4f;
+
         wheelShape.setRadius(wheelRadius);
         FixtureDef wheelFixtureDef = new FixtureDef();
-        wheelFixtureDef.density = 0.6f;
-        wheelFixtureDef.restitution = 0.1f;
-        wheelFixtureDef.friction = 2f;
+        wheelFixtureDef.density = 0.5f;
+        wheelFixtureDef.restitution = 0.2f;
+        wheelFixtureDef.friction = 1f;
         wheelFixtureDef.shape = wheelShape;
-        Body wheelBody = box2dSystem.getBox2DWorld().createBody(bodyDef);
-        wheelBody.createFixture(wheelFixtureDef);
+        Body rightWheelBody = box2dSystem.getBox2DWorld().createBody(dynamicBodyDef);
+        rightWheelBody.createFixture(wheelFixtureDef);
         WheelJointDef wheelJointDef = new WheelJointDef();
         wheelJointDef.bodyA = carBody;
-        wheelJointDef.bodyB = wheelBody;
+        wheelJointDef.bodyB = rightWheelBody;
         /// localAnchorA is relative to bodyA's origin
-        wheelJointDef.localAnchorA.set(2.65f, -1f);
-        wheelJointDef.localAnchorB.set(0f, 0f); // circle origin is center...right?
-        wheelJointDef.localAxisA.set(Vector2.Y); // wut diz?
-        wheelJointDef.frequencyHz = fixtureDef.density; // wut diz ??
+        // float wheelBodyAnchorY = -carBodySprite.getHeight() / 2;
+        float wheelBodyAnchorY = 0;
+        //wheelJointDef.localAnchorA.set(2.65f, wheelBodyAnchorY);
+        wheelJointDef.localAnchorA.set(2.65f, 0);
+        //wheelJointDef.localAnchorB.set(0, 0); // circle origin is center...right?
+        // move along which axis (I guess)
+        wheelJointDef.localAxisA.set(Vector2.Y); // along which axis the wheel can move
+        wheelJointDef.frequencyHz = 10; // wut diz ??
+        wheelJointDef.dampingRatio = 0.2f;
         wheelJointDef.maxMotorTorque = fixtureDef.density * 10; // copypasta from some example
-        WheelJoint wheelJoint = (WheelJoint)box2dSystem.getBox2DWorld().createJoint(wheelJointDef);
+        box2dSystem.getBox2DWorld().createJoint(wheelJointDef);
 
-        // A wheel, sprite part
         Texture wheelTexture = ResourceManager.instance.wheel;
-        Sprite wheelSprite = new Sprite(wheelTexture);
-        wheelSprite.setSize(wheelRadius * 2f, wheelRadius * 2f);
-        wheelSprite.setOrigin(wheelSprite.getWidth() / 2, wheelSprite.getHeight() / 2);
+        Sprite rightWheelSprite = new Sprite(wheelTexture);
+        rightWheelSprite.setSize(wheelRadius * 2f, wheelRadius * 2f);
+        rightWheelSprite.setOrigin(rightWheelSprite.getWidth() / 2, rightWheelSprite.getHeight() / 2);
+
         // not setting position; SpritePositioningSystem will take care of that for us!
         e = artemisWorld.create();
         physics = mappers.physicsComponents.create(e);
-        physics.body = wheelBody;
+        physics.body = rightWheelBody;
         spriteComponent = mappers.spriteComponents.create(e);
-        spriteComponent.sprite = wheelSprite;
+        spriteComponent.sprite = rightWheelSprite;
+
+        // Left Wheel
+        // **********
+
+        Body leftWheelBody = box2dSystem.getBox2DWorld().createBody(dynamicBodyDef);
+        leftWheelBody.createFixture(wheelFixtureDef);
+        wheelJointDef.bodyB = leftWheelBody;
+        wheelJointDef.localAnchorA.set(0.8f, wheelBodyAnchorY);
+
+        box2dSystem.getBox2DWorld().createJoint(wheelJointDef);
+
+        Sprite leftWheelSprite = new Sprite(wheelTexture);
+        leftWheelSprite.setSize(wheelRadius * 2f, wheelRadius * 2f);
+        leftWheelSprite.setOrigin(rightWheelSprite.getWidth() / 2, rightWheelSprite.getHeight() / 2);
+
+        e = artemisWorld.create();
+        physics = mappers.physicsComponents.create(e);
+        physics.body = leftWheelBody;
+        spriteComponent = mappers.spriteComponents.create(e);
+        spriteComponent.sprite = leftWheelSprite;
     }
 
     private void createPlayerEntity() {
@@ -248,6 +275,7 @@ public class GameScreen implements Screen {
         // Also update the HUD
         HUDDisplaySystem hudDisplaySystem = artemisWorld.getSystem(HUDDisplaySystem.class);
         hudDisplaySystem.resize(width, height);
+
     }
 
     @Override

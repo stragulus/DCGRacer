@@ -119,6 +119,8 @@ public class LandscapeUpdateSystem extends BaseSystem {
         // Just 1 segment, with roughness set to a higher value for that extra bumpiness.
         result = generateTerrainDataProcedurally(11, 18f, 2f, 0.25f, 0.91f, 1);
 
+        // testing; giant flat surfaces
+        //result = generateTerrainDataProcedurally(11, 1f, 20f, 0.25f, 0.7f, 1);
         return result;
     }
 

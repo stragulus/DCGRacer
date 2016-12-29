@@ -23,7 +23,7 @@ import org.avontuur.dcgracer.manager.ScreenManager;
  */
 public class DCGRacer extends Game {
 
-    private static long SPLASH_MINIMUM_MILLIS = 2000L;
+    private static long SPLASH_MINIMUM_MILLIS = 1000L;
 
     public static final Logger log = new Logger("Game", Logger.DEBUG);
 

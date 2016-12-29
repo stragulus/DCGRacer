@@ -13,6 +13,7 @@ public class Box2dWorldSystem extends BaseSystem {
     private static final float GRAVITY = -9.8f;
 
     private World box2DWorld;
+    private boolean pause;
 
     @Override
     protected void initialize() {
@@ -29,7 +30,10 @@ public class Box2dWorldSystem extends BaseSystem {
         // TODO: see comment above, fine-tune these parameters.
         float gameLoopDelta = world.getDelta();
         //box2DWorld.step(1f/60f, 6, 2);
-        box2DWorld.step(gameLoopDelta, 6, 2);
+        float slowDownFactor = 1f;
+        if (!this.pause) {
+            box2DWorld.step(gameLoopDelta * slowDownFactor, 6, 2);
+        }
 
         // Example taken from other game (and read about this in the box2d docs somewhere):
         /*
@@ -42,6 +46,9 @@ public class Box2dWorldSystem extends BaseSystem {
         */
     }
 
+    public void setPause(boolean pause) {
+        this.pause = pause;
+    }
     /**
      * @return Reference to the box2d world
      */
