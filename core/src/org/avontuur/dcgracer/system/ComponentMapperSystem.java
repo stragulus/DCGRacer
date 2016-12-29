@@ -10,6 +10,7 @@ import org.avontuur.dcgracer.component.Physics;
 import org.avontuur.dcgracer.component.PlayerInput;
 import org.avontuur.dcgracer.component.PolygonRegion;
 import org.avontuur.dcgracer.component.Sprite;
+import org.avontuur.dcgracer.component.WheelJoint;
 
 /**
  * Placeholder system for all the various component mappers used throughout the game.
@@ -25,6 +26,7 @@ public class ComponentMapperSystem extends BaseSystem {
     public ComponentMapper<PlayerInput> playerInputComponents;
     public ComponentMapper<Sprite> spriteComponents;
     public ComponentMapper<PolygonRegion> polygonRegionComponents;
+    public ComponentMapper<WheelJoint> wheelJointComponents;
 
 
     public ComponentMapperSystem() {

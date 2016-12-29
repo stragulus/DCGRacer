@@ -2,6 +2,7 @@ package org.avontuur.dcgracer.system;
 
 import com.artemis.Aspect;
 import com.artemis.systems.IteratingSystem;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.input.GestureDetector;
@@ -28,7 +29,7 @@ public class PlayerInputSystem extends IteratingSystem implements GestureDetecto
     private boolean pauseToggled = false;
 
     // Amount of force applied to player for each fling
-    public static final float PUSH_FORCE = 15f;
+    public static final float PUSH_FORCE = 10f;
 
     public PlayerInputSystem() {
         super(Aspect.all(PlayerInput.class, Motion.class));
@@ -41,15 +42,15 @@ public class PlayerInputSystem extends IteratingSystem implements GestureDetecto
         if (pushDirection > 0) {
             motion.force.x = PUSH_FORCE;
             motion.force.y = 0;
+            pushDirection = 1;
         } else if (pushDirection < 0) {
             motion.force.x = -PUSH_FORCE;
             motion.force.y = 0;
+            pushDirection = -1;
         } else {
             motion.force.x = 0;
             motion.force.y = 0;
         }
-
-        pushDirection = 0;
     }
 
     @Override
@@ -68,6 +69,7 @@ public class PlayerInputSystem extends IteratingSystem implements GestureDetecto
         return false;
     }
 
+
     @Override
     public boolean tap(float x, float y, int count, int button) {
         return false;
@@ -79,17 +81,7 @@ public class PlayerInputSystem extends IteratingSystem implements GestureDetecto
     }
 
     @Override
-    public boolean fling(float velocityX, float velocityY, int button) {
-        if (velocityX > 0) {
-            pushDirection = 1;
-            return true;
-        } else if (velocityX < 0) {
-            pushDirection = -1;
-            return true;
-        } else {
-            return false;
-        }
-    }
+    public boolean fling(float velocityX, float velocityY, int button) { return false; }
 
     @Override
     public boolean pan(float x, float y, float deltaX, float deltaY) {
@@ -113,18 +105,24 @@ public class PlayerInputSystem extends IteratingSystem implements GestureDetecto
 
     @Override
     public boolean keyDown(int keycode) {
-        return false;
-    }
-
-    @Override
-    public boolean keyUp(int keycode) {
         if (keycode == Input.Keys.RIGHT) {
             pushDirection = 1;
             return true;
         } else if (keycode == Input.Keys.LEFT) {
             pushDirection = -1;
             return true;
-        } else if (keycode == Input.Keys.SPACE) {
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean keyUp(int keycode) {
+        if (keycode == Input.Keys.RIGHT || keycode == Input.Keys.LEFT) {
+            pushDirection = 0;
+        }
+
+        if (keycode == Input.Keys.SPACE) {
             pause = !pause;
             pauseToggled = true;
             return true;
@@ -140,12 +138,18 @@ public class PlayerInputSystem extends IteratingSystem implements GestureDetecto
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        return false;
+        if (screenX > Gdx.graphics.getWidth() / 2) {
+            pushDirection = 1;
+        } else {
+            pushDirection = -1;
+        }
+        return true;
     }
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        return false;
+        pushDirection = 0;
+        return true;
     }
 
     @Override

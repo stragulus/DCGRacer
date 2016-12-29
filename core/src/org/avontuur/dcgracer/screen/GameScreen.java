@@ -182,7 +182,7 @@ public class GameScreen implements Screen {
         wheelJointDef.frequencyHz = 10; // wut diz ??
         wheelJointDef.dampingRatio = 0.2f;
         wheelJointDef.maxMotorTorque = fixtureDef.density * 10; // copypasta from some example
-        box2dSystem.getBox2DWorld().createJoint(wheelJointDef);
+        WheelJoint rightWheelJoint = (WheelJoint)box2dSystem.getBox2DWorld().createJoint(wheelJointDef);
 
         Texture wheelTexture = ResourceManager.instance.wheel;
         Sprite rightWheelSprite = new Sprite(wheelTexture);
@@ -195,6 +195,10 @@ public class GameScreen implements Screen {
         physics.body = rightWheelBody;
         spriteComponent = mappers.spriteComponents.create(e);
         spriteComponent.sprite = rightWheelSprite;
+        // this will make the camera track the car body
+        mappers.mainPlayerComponents.create(e);
+        org.avontuur.dcgracer.component.WheelJoint rightWheelJointComponent = mappers.wheelJointComponents.create(e);
+        rightWheelJointComponent.wheelJoint = rightWheelJoint;
 
         // Left Wheel
         // **********
@@ -204,7 +208,7 @@ public class GameScreen implements Screen {
         wheelJointDef.bodyB = leftWheelBody;
         wheelJointDef.localAnchorA.set(0.8f, wheelBodyAnchorY);
 
-        box2dSystem.getBox2DWorld().createJoint(wheelJointDef);
+        WheelJoint leftWheelJoint = (WheelJoint)box2dSystem.getBox2DWorld().createJoint(wheelJointDef);
 
         Sprite leftWheelSprite = new Sprite(wheelTexture);
         leftWheelSprite.setSize(wheelRadius * 2f, wheelRadius * 2f);
@@ -215,6 +219,12 @@ public class GameScreen implements Screen {
         physics.body = leftWheelBody;
         spriteComponent = mappers.spriteComponents.create(e);
         spriteComponent.sprite = leftWheelSprite;
+        org.avontuur.dcgracer.component.WheelJoint leftWheelJointComponent = mappers.wheelJointComponents.create(e);
+        leftWheelJointComponent.wheelJoint = leftWheelJoint;
+
+        // let the player can control this wheel - rear wheel drive!
+        mappers.playerInputComponents.create(e);
+        mappers.motionComponents.create(e);
     }
 
     private void createPlayerEntity() {
@@ -251,9 +261,9 @@ public class GameScreen implements Screen {
 
         // TODO: This looks horrible. Is this really the way to go forward?
         int e = artemisWorld.create();
-        mappers.mainPlayerComponents.create(e);
+        //mappers.mainPlayerComponents.create(e);
+        //mappers.motionComponents.create(e);
         mappers.playerInputComponents.create(e);
-        mappers.motionComponents.create(e);
         Physics physics = mappers.physicsComponents.create(e);
         physics.body = playerBody;
         org.avontuur.dcgracer.component.Sprite spriteComponent = mappers.spriteComponents.create(e);
