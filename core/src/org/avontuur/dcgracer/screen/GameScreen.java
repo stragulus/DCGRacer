@@ -153,6 +153,8 @@ public class GameScreen implements Screen {
         physics.body = carBody;
         org.avontuur.dcgracer.component.Sprite spriteComponent = mappers.spriteComponents.create(e);
         spriteComponent.sprite = carBodySprite;
+        // this will make the camera track the car body
+        mappers.mainPlayerComponents.create(e);
 
         // Right Wheel
         // ***********
@@ -195,8 +197,6 @@ public class GameScreen implements Screen {
         physics.body = rightWheelBody;
         spriteComponent = mappers.spriteComponents.create(e);
         spriteComponent.sprite = rightWheelSprite;
-        // this will make the camera track the car body
-        mappers.mainPlayerComponents.create(e);
         org.avontuur.dcgracer.component.WheelJoint rightWheelJointComponent = mappers.wheelJointComponents.create(e);
         rightWheelJointComponent.wheelJoint = rightWheelJoint;
 
