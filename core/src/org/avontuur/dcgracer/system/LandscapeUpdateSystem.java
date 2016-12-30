@@ -117,8 +117,9 @@ public class LandscapeUpdateSystem extends BaseSystem {
         // transition is often not very smooth
         //result = generateTerrainDataProcedurally(5, 18f, 2f, 0.25f, 0.5f, 800);
         // Just 1 segment, with roughness set to a higher value for that extra bumpiness.
-        result = generateTerrainDataProcedurally(11, 18f, 2f, 0.25f, 0.91f, 1);
+        //result = generateTerrainDataProcedurally(11, 18f, 2f, 0.25f, 0.91f, 1);
 
+        result = generateTerrainDataProcedurally(11, 18f, 2f, 0.25f, 0.78f, 1);
         // testing; giant flat surfaces
         //result = generateTerrainDataProcedurally(11, 1f, 20f, 0.25f, 0.7f, 1);
         return result;
@@ -256,6 +257,7 @@ public class LandscapeUpdateSystem extends BaseSystem {
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = terrainShape;
         fixtureDef.density = 1f;
+        fixtureDef.friction = 0.8f;
 
         bodyTerrain.createFixture(fixtureDef);
         terrainShape.dispose();

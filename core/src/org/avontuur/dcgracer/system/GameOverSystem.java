@@ -31,14 +31,9 @@ public class GameOverSystem extends IteratingSystem {
         boolean died = false;
         float angleDegrees = body.getAngle() * MathUtils.radiansToDegrees % 360;
 
-        if (Math.abs(angleDegrees) > 90) {
-            DCGRacer.log.debug("Body angle/degrees: " + angleDegrees);
-        }
-
-
-        if (body.getPosition().y < 0) {
+        if (body.getPosition().y < -10) {
             died = true;
-        } else if (Math.abs(angleDegrees) > 90 && Math.abs(body.getLinearVelocity().x) < 0.001) {
+        } else if (Math.abs(angleDegrees) > 150 && Math.abs(body.getLinearVelocity().x) < 0.001) {
             // At a large angle without speed. Could technically still recover (sliding down a hill), but
             // for now it's good. When turning this into an actual game, it runs out of fuel and only dies then.
             died = true;

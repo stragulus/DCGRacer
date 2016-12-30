@@ -93,9 +93,9 @@ public class TrackingCamera extends OrthographicCamera {
      */
     public void center(Body body, float deltaTime) {
         translate(
-                centerXorY(body.getPosition().x, position.x, viewportWidth, boundaryLeft, boundaryRight,
+                centerXorY(body.getWorldCenter().x, position.x, viewportWidth, boundaryLeft, boundaryRight,
                         deltaTime, centerX),
-                centerXorY(body.getPosition().y, position.y, viewportHeight, boundaryTop, boundaryBottom,
+                centerXorY(body.getWorldCenter().y, position.y, viewportHeight, boundaryTop, boundaryBottom,
                         deltaTime, centerY)
         );
     }

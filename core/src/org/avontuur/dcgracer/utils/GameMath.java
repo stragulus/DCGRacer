@@ -65,8 +65,9 @@ public class GameMath {
                                           final float range, final float roughness) {
         // Recursive implementation of the midfield displacement algorithm that generates a 2-dimensional terrain.
         // TODO: write a test for this function!
-        float midPoint = MathUtils.clamp((values[firstIndex] + values[lastIndex]) / 2f + random(-range, range), 0,
-                range * 2);
+        //float midPoint = MathUtils.clamp((values[firstIndex] + values[lastIndex]) / 2f + random(-range, range), 0,
+        //        range * 2);
+        float midPoint = (values[firstIndex] + values[lastIndex]) / 2f + random(-range, range);
         int midIndex = firstIndex + ((lastIndex - firstIndex) / 2);
         values[midIndex] = midPoint;
         if (midIndex != firstIndex + 1) {

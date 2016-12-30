@@ -46,7 +46,7 @@ import org.avontuur.dcgracer.utils.TrackingCamera;
 public class GameScreen implements Screen {
 
     // with, in world units (meters) of the visible world
-    final float VIEWPORT_WIDTH = 10f;
+    final float VIEWPORT_WIDTH = 15f;
 
     // Maximum frame time still acceptable for reliable physics processing
     public static final float MAX_FRAME_TIME = 1 / 15f;
@@ -123,7 +123,7 @@ public class GameScreen implements Screen {
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.density = 1;
-        fixtureDef.friction = 0.5f;
+        fixtureDef.friction = 1f;
         fixtureDef.restitution = 0f;
 
         Texture carBodyTexture = ResourceManager.instance.carBody;
@@ -165,8 +165,8 @@ public class GameScreen implements Screen {
         wheelShape.setRadius(wheelRadius);
         FixtureDef wheelFixtureDef = new FixtureDef();
         wheelFixtureDef.density = 0.5f;
-        wheelFixtureDef.restitution = 0.2f;
-        wheelFixtureDef.friction = 1f;
+        wheelFixtureDef.restitution = 0.1f;
+        wheelFixtureDef.friction = 0.5f;
         wheelFixtureDef.shape = wheelShape;
         Body rightWheelBody = box2dSystem.getBox2DWorld().createBody(dynamicBodyDef);
         rightWheelBody.createFixture(wheelFixtureDef);
@@ -181,8 +181,8 @@ public class GameScreen implements Screen {
         //wheelJointDef.localAnchorB.set(0, 0); // circle origin is center...right?
         // move along which axis (I guess)
         wheelJointDef.localAxisA.set(Vector2.Y); // along which axis the wheel can move
-        wheelJointDef.frequencyHz = 10; // wut diz ??
-        wheelJointDef.dampingRatio = 0.2f;
+        wheelJointDef.frequencyHz = 7; // Stiffness of the suspension. Low value is weak spring = less bounce
+        wheelJointDef.dampingRatio = 0.3f; // Rate at which spring frequency declines. Lower = longer bounce
         wheelJointDef.maxMotorTorque = fixtureDef.density * 10; // copypasta from some example
         WheelJoint rightWheelJoint = (WheelJoint)box2dSystem.getBox2DWorld().createJoint(wheelJointDef);
 

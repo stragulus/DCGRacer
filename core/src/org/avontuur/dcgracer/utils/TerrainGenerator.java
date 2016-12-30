@@ -33,7 +33,7 @@ public abstract class TerrainGenerator {
                                               final float scaleY, final float xOffset,
                                               final float firstY, final float roughness) {
         float[] terrainDataPointsRaw = GameMath.midpointDisplacement2D(numIterations, range, firstY / scaleY,
-                (float)Math.random() * range, roughness);
+                range, roughness);
         // + 3 * 2: adding vertices to make it a closed simple polygon so it can be filled with a background texture
         float[] terrainDataPoints = new float[terrainDataPointsRaw.length * 2];
 
