@@ -13,8 +13,8 @@ import org.avontuur.dcgracer.component.PlayerInput;
  */
 
 public class PlayerInputMotionSystem extends IteratingSystem {
-    // Amount of horizontal speed applied to wheel of player's car
-    public static final float WHEEL_SPEED = 10f;
+    // Amount of horizontal speed applied to wheel of player's car over a second.
+    public static final float WHEEL_SPEED = 600f;
 
     private ComponentMapperSystem mappers;
 
@@ -29,10 +29,10 @@ public class PlayerInputMotionSystem extends IteratingSystem {
         float accelerate = playerInputComponent.accelerate;
 
         if (accelerate > 0) {
-            motion.force.x = WHEEL_SPEED;
+            motion.force.x = WHEEL_SPEED * world.getDelta();
             motion.force.y = 0;
         } else if (accelerate < 0) {
-            motion.force.x = -WHEEL_SPEED;
+            motion.force.x = -WHEEL_SPEED * world.getDelta();
             motion.force.y = 0;
         } else {
             motion.force.x = 0;

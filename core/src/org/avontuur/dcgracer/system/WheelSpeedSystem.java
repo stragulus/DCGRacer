@@ -8,6 +8,7 @@ import org.avontuur.dcgracer.component.Physics;
 import org.avontuur.dcgracer.component.WheelJoint;
 
 /**
+ * Sets wheel motor speed based on a motion vector.
  * Created by Bram Avontuur on 2016-12-28.
  */
 
@@ -23,7 +24,6 @@ public class WheelSpeedSystem extends IteratingSystem {
         Motion motionComponent = mappers.motionComponents.get(entityId);
         WheelJoint wheelJointComponent = mappers.wheelJointComponents.get(entityId);
         wheelJointComponent.wheelJoint.enableMotor(true);
-        // TODO: recycling motion here just to set, not sure how to control wheel joint motor speed just yet
         wheelJointComponent.wheelJoint.setMotorSpeed(motionComponent.force.x);
     }
 }
