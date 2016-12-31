@@ -6,7 +6,9 @@ package org.avontuur.dcgracer.manager;
  * This class manages all static assets.
  */
 
+import com.badlogic.gdx.Audio;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 
 import org.avontuur.dcgracer.DCGRacer;
@@ -22,6 +24,9 @@ public class ResourceManager {
     public Texture wheel;
     public Texture coin;
 
+    // audio samples
+    public Sound carEngineSound;
+
     // singleton: prevent instantiation from other classes
     private ResourceManager() {
     }
@@ -36,6 +41,8 @@ public class ResourceManager {
     }
 
     private void loadSoundEffects() {
+
+        carEngineSound = Gdx.audio.newSound(Gdx.files.internal("car engine.wav"));
     }
 
     private void loadMusic() {
@@ -47,5 +54,9 @@ public class ResourceManager {
         loadSoundEffects();
         loadTextures();
         DCGRacer.log.info("Loaded all resources");
+    }
+
+    public void stopSounds() {
+        carEngineSound.stop();
     }
 }

@@ -24,12 +24,15 @@ import org.avontuur.dcgracer.manager.ResourceManager;
 import org.avontuur.dcgracer.system.Box2dWorldSystem;
 import org.avontuur.dcgracer.system.CameraEnum;
 import org.avontuur.dcgracer.system.CameraUpdateSystem;
+import org.avontuur.dcgracer.system.CarEngineAcceleratorInputSystem;
+import org.avontuur.dcgracer.system.CarEngineSoundSystem;
 import org.avontuur.dcgracer.system.ComponentMapperSystem;
 import org.avontuur.dcgracer.system.DebugRenderingSystem;
 import org.avontuur.dcgracer.system.GameOverSystem;
 import org.avontuur.dcgracer.system.HUDDisplaySystem;
 import org.avontuur.dcgracer.system.LandscapeUpdateSystem;
 import org.avontuur.dcgracer.system.MotionSystem;
+import org.avontuur.dcgracer.system.PlayerInputMotionSystem;
 import org.avontuur.dcgracer.system.PlayerInputSystem;
 import org.avontuur.dcgracer.system.PolygonRegionRenderingSystem;
 import org.avontuur.dcgracer.system.RenderCanvasSystem;
@@ -62,10 +65,13 @@ public class GameScreen implements Screen {
                 .with(new ComponentMapperSystem())
                 .with(new Box2dWorldSystem())
                 .with(new PlayerInputSystem())
+                .with(new PlayerInputMotionSystem())
+                .with(new CarEngineAcceleratorInputSystem())
                 .with(new MotionSystem())
                 .with(new SpritePositionSystem())
                 .with(new CameraUpdateSystem(VIEWPORT_WIDTH))
                 .with(new LandscapeUpdateSystem(VIEWPORT_WIDTH))
+                .with(new CarEngineSoundSystem())
                 .with(new RenderCanvasSystem())
                 .with(new SpriteRenderingSystem())
                 //.with(new DebugRenderingSystem())
@@ -155,6 +161,9 @@ public class GameScreen implements Screen {
         spriteComponent.sprite = carBodySprite;
         // this will make the camera track the car body
         mappers.mainPlayerComponents.create(e);
+        // this is used for the car engine sound, which is controlled by car speed and player inputs.
+        mappers.carEngineComponents.create(e);
+        mappers.playerInputComponents.create(e);
 
         // Right Wheel
         // ***********

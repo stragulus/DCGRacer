@@ -10,6 +10,9 @@ import com.badlogic.gdx.input.GestureDetector;
  */
 
 public class PlayerInput extends Component {
+    // Accelerator/decelerator action. <0: Decelerator, >0: accelerator
+    public int accelerate;
+
     public PlayerInput() {
     }
 

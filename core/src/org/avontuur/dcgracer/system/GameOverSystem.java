@@ -9,6 +9,7 @@ import com.badlogic.gdx.physics.box2d.Body;
 import org.avontuur.dcgracer.DCGRacer;
 import org.avontuur.dcgracer.component.MainPlayer;
 import org.avontuur.dcgracer.component.Physics;
+import org.avontuur.dcgracer.manager.ResourceManager;
 import org.avontuur.dcgracer.manager.ScreenEnum;
 import org.avontuur.dcgracer.manager.ScreenManager;
 
@@ -41,6 +42,7 @@ public class GameOverSystem extends IteratingSystem {
         }
 
         if (died) {
+            ResourceManager.instance.stopSounds();
             ScreenManager.getInstance().showScreen(ScreenEnum.GAMEOVER);
         }
     }

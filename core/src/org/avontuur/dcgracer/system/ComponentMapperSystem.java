@@ -4,6 +4,7 @@ import com.artemis.BaseSystem;
 import com.artemis.ComponentMapper;
 
 import org.avontuur.dcgracer.component.CameraID;
+import org.avontuur.dcgracer.component.CarEngine;
 import org.avontuur.dcgracer.component.MainPlayer;
 import org.avontuur.dcgracer.component.Motion;
 import org.avontuur.dcgracer.component.Physics;
@@ -27,6 +28,7 @@ public class ComponentMapperSystem extends BaseSystem {
     public ComponentMapper<Sprite> spriteComponents;
     public ComponentMapper<PolygonRegion> polygonRegionComponents;
     public ComponentMapper<WheelJoint> wheelJointComponents;
+    public ComponentMapper<CarEngine> carEngineComponents;
 
 
     public ComponentMapperSystem() {
